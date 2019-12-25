@@ -21,9 +21,9 @@
     const char* strval;
 }
 
-%token<strval> T_NUM T_ID T_STR T_OP
+%token<strval> T_NUM T_ID T_STR T_BIN_OP T_ASSIGN_OP
 
-%token KW_INCLUDE KW_FUNC KW_IF
+%token KW_INCLUDE KW_FUNC KW_IF KW_LOOP
 
 %type<strval> module top_level_statement statement_block statement
 %type<strval> func_params param_list param_list_next pointers operator
@@ -50,6 +50,7 @@ statement_block:                                { $$ = ""; }
 statement: expression                                       { $$ = strformat("    %s;\n", $1); }
          | '{' statement_block '}'                          { $$ = strformat("{\n%s}\n", $2); }
          | '(' KW_IF expression statement statement ')'     { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
+         | '(' KW_LOOP expression statement_block ')'       { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          ;
 
 func_params:                            { $$ = "void"; }
@@ -89,7 +90,8 @@ basic_value: T_NUM                      { $$ = $1; }
            | T_ID                       { $$ = $1; }
            ;
 
-operator: T_OP                          { $$ = $1; }
+operator: T_BIN_OP                      { $$ = $1; }
+        | T_ASSIGN_OP                   { $$ = $1; }
         | '*'                           { $$ = "*"; }
         ;
 

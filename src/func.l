@@ -28,12 +28,14 @@
 "include"                       TOKEN(KW_INCLUDE)
 "func"                          TOKEN(KW_FUNC)
 "if"                            TOKEN(KW_IF)
+"loop"                          TOKEN(KW_LOOP)
 
 [0-9]+(\.[0-9]+)?               STR_TOKEN(T_NUM)
 [_a-zA-Z][_a-zA-Z0-9]*          STR_TOKEN(T_ID)
 \"([^\\\"]|\\.)*\"              STR_TOKEN(T_STR)
 
-(==|!=|<|>|<=|>=|\+|-|\/|%)     STR_TOKEN(T_OP)
+(==|!=|<|>|<=|>=|\+|-|\/|%)     STR_TOKEN(T_BIN_OP)
+(=|\+=|-=|\*=|\/=|%=|&=|\|=)      STR_TOKEN(T_ASSIGN_OP)
 
 [{}\*,\[\]]                     CHAR_TOKEN
 
