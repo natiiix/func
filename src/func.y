@@ -27,7 +27,7 @@
     const char* strval;
 }
 
-%token<strval> T_NUM T_ID T_STR T_BIN_OP T_ASSIGN_OP
+%token<strval> T_ID T_NUM T_STR T_CHAR T_BIN_OP T_ASSIGN_OP
 
 %token KW_INCLUDE KW_FUNC KW_IF KW_LOOP
 
@@ -99,9 +99,10 @@ expression: '(' T_ID call_args ')'          { $$ = strformat("%s(%s)", $2, $3); 
 arith_expr: operator expression expression   { $$ = strformat("%s %s %s", $2, $1, $3); }
           ;
 
-basic_value: T_NUM                      { $$ = $1; }
+basic_value: T_ID                       { $$ = $1; }
+           | T_NUM                      { $$ = $1; }
            | T_STR                      { $$ = $1; }
-           | T_ID                       { $$ = $1; }
+           | T_CHAR                     { $$ = $1; }
            ;
 
 operator: T_BIN_OP                      { $$ = $1; }
