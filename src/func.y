@@ -32,7 +32,7 @@
 %token KW_INCLUDE KW_FUNC KW_IF KW_WHILE
 
 %type<strval> statement_block statement
-%type<strval> func_params param_list param_list_next pointers operator
+%type<strval> func_params param_list param_list_next type pointers operator
 %type<strval> call_args call_args_next expression arith_expr basic_value
 
 %%
@@ -53,7 +53,7 @@ top_level_statement_block:
                          | top_level_statement top_level_statement_block
                          ;
 
-top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' T_ID statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
+top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -70,12 +70,15 @@ func_params:                            { $$ = "void"; }
            | param_list                 { $$ = $1; }
            ;
 
-param_list: T_ID pointers T_ID param_list_next  { $$ = strformat("%s%s %s%s", $1, $2, $3, $4); }
+param_list: T_ID type param_list_next   { $$ = strformat("%s %s%s", $2, $1, $3); }
           ;
 
 param_list_next:                        { $$ = ""; }
                | ',' param_list         { $$ = strformat(", %s", $2); }
                ;
+
+type: T_ID pointers                     { $$ = strformat("%s%s", $1, $2); }
+    ;
 
 pointers:                               { $$ = ""; }
         | '*' pointers                  { $$ = strformat("*%s", $2); }

@@ -1,6 +1,6 @@
 [stdio]
 
-(func main (int argc, char** argv) int
+(func main (argc int, argv char**) int
     (puts [argv])
     (printf "[%c]\n" [[argv]])
 
@@ -16,7 +16,7 @@
     (return 0)
 )
 
-(func fact (int n) int
+(func fact (n int) int
     (if (<= n 0)
         (return 1)
         (return
