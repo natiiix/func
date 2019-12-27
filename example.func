@@ -1,10 +1,11 @@
-(include stdio)
+[stdio]
 
-(func int main (int argc, char** argv)
+(func main (int argc, char** argv) int
+    (puts [argv])
+
     (if (> argc 1)
-        (loop argc
-            (printf "%s\n" argv[(- argc 1)])
-            (-= argc 1)
+        (loop (-= argc 1)
+            (printf "%s\n" [argv argc])
         )
         (puts "Hello World!")
     )
@@ -14,7 +15,7 @@
     (return 0)
 )
 
-(func int fact (int n)
+(func fact (int n) int
     (if (<= n 0)
         (return 1)
         (return

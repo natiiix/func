@@ -37,16 +37,23 @@
 
 %%
 
-translation_unit: module
-                ;
-
-module:
-      | top_level_statement module
+module: include_block top_level_statement_block
       ;
 
+include_block:
+             | '[' include_list ']' include_block
+             ;
 
-top_level_statement: '(' KW_INCLUDE T_ID ')'                                        { StrList_append(&INCLUDE_LIST, strformat("#include <%s.h>", $3)); }
-                   | '(' KW_FUNC T_ID T_ID '(' func_params ')' statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $3, $4, $6, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $3, $4, $6)); }
+include_list:
+            | T_ID include_list         { StrList_append(&INCLUDE_LIST, strformat("#include <%s.h>", $1)); }
+            | T_STR include_list        { StrList_append(&INCLUDE_LIST, strformat("#include \"%s\"", $1)); }
+            ;
+
+top_level_statement_block:
+                         | top_level_statement top_level_statement_block
+                         ;
+
+top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' T_ID statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -82,9 +89,10 @@ call_args_next:                             { $$ = ""; }
               | expression call_args_next   { $$ = strformat(", %s%s", $1, $2); }
               ;
 
-expression: expression '[' expression ']'   { $$ = strformat("%s[%s]", $1, $3); }
-          | '(' T_ID call_args ')'          { $$ = strformat("%s(%s)", $2, $3); }
+expression: '(' T_ID call_args ')'          { $$ = strformat("%s(%s)", $2, $3); }
           | '(' arith_expr ')'              { $$ = strformat("(%s)", $2); }
+          | '[' expression ']'              { $$ = strformat("(*%s)", $2); }
+          | '[' expression expression ']'   { $$ = strformat("(%s[%s])", $2, $3); }
           | basic_value                     { $$ = $1; }
           ;
 
