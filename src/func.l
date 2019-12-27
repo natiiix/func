@@ -35,7 +35,7 @@
 \"([^\\\"]|\\.)*\"              STR_TOKEN(T_STR)
 
 (==|!=|<|>|<=|>=|\+|-|\/|%)     STR_TOKEN(T_BIN_OP)
-(=|\+=|-=|\*=|\/=|%=|&=|\|=)      STR_TOKEN(T_ASSIGN_OP)
+(=|\+=|-=|\*=|\/=|%=|&=|\|=)    STR_TOKEN(T_ASSIGN_OP)
 
 [{}\*,\[\]]                     CHAR_TOKEN
 
