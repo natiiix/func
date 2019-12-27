@@ -1,4 +1,5 @@
 #include "strlist.h"
+#include <stdio.h>
 #include <string.h>
 
 const size_t INIT_CAP = 64;
@@ -68,4 +69,12 @@ char* StrList_join(StrList_t* const list, const char* const separator)
     }
 
     return result;
+}
+
+void StrList_printf(StrList_t* const list, const char* const format)
+{
+    for (size_t i = 0; i < list->size; i++)
+    {
+        printf(format, list->ptr[i]);
+    }
 }

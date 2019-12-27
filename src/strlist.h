@@ -16,5 +16,6 @@ void StrList_dtor(const StrList_t* const list);
 
 void StrList_append(StrList_t* const list, const char* const str);
 char* StrList_join(StrList_t* const list, const char* const delimiter);
+void StrList_printf(StrList_t* const list, const char* const format);
 
 #endif
