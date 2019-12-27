@@ -25,10 +25,9 @@
 
 [\(\)]                          CHAR_TOKEN
 
-"include"                       TOKEN(KW_INCLUDE)
 "func"                          TOKEN(KW_FUNC)
 "if"                            TOKEN(KW_IF)
-"loop"                          TOKEN(KW_LOOP)
+"while"                         TOKEN(KW_WHILE)
 
 [_a-zA-Z][_a-zA-Z0-9]*          STR_TOKEN(T_ID)
 [0-9]+(\.[0-9]+)?               STR_TOKEN(T_NUM)
