@@ -17,6 +17,7 @@
     char* strformat(const char* const format, ...);
 
     StrList_t INCLUDE_LIST;
+    StrList_t STRUCT_LIST;
     StrList_t FUNC_PREDEF_LIST;
     StrList_t FUNC_LIST;
 %}
@@ -29,10 +30,10 @@
 
 %token<strval> T_ID T_NUM T_STR T_CHAR T_BIN_OP T_ASSIGN_OP
 
-%token KW_INCLUDE KW_FUNC KW_IF KW_WHILE
+%token KW_FUNC KW_STRUCT KW_IF KW_WHILE
 
 %type<strval> statement_block statement
-%type<strval> func_params param_list param_list_next type pointers operator
+%type<strval> func_params param_list param_list_next struct_attributes var_def type pointers operator
 %type<strval> call_args call_args_next expression arith_expr basic_value
 
 %%
@@ -54,6 +55,7 @@ top_level_statement_block:
                          ;
 
 top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
+                   | '(' KW_STRUCT T_ID struct_attributes ')'                       { StrList_append(&STRUCT_LIST, strformat("typedef struct {\n%s} %s;", $4, $3)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -63,19 +65,26 @@ statement_block:                                { $$ = ""; }
 statement: expression                                       { $$ = strformat("    %s;\n", $1); }
          | '{' statement_block '}'                          { $$ = strformat("{\n%s}\n", $2); }
          | '(' KW_IF expression statement statement ')'     { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
-         | '(' KW_WHILE expression statement_block ')'       { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_WHILE expression statement_block ')'      { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          ;
 
 func_params:                            { $$ = "void"; }
            | param_list                 { $$ = $1; }
            ;
 
-param_list: T_ID type param_list_next   { $$ = strformat("%s %s%s", $2, $1, $3); }
+param_list: var_def param_list_next     { $$ = strformat("%s%s", $1, $2); }
           ;
 
 param_list_next:                        { $$ = ""; }
                | ',' param_list         { $$ = strformat(", %s", $2); }
                ;
+
+struct_attributes:                                      { $$ = ""; }
+                 | '(' var_def ')' struct_attributes    { $$ = strformat("    %s;\n%s", $2, $4); }
+                 ;
+
+var_def: T_ID type                      { $$ = strformat("%s %s", $2, $1); }
+       ;
 
 type: T_ID pointers                     { $$ = strformat("%s%s", $1, $2); }
     ;
@@ -136,16 +145,21 @@ int main(const int argc, const char* const* const argv) {
     yyin = stdin;
 
     INCLUDE_LIST = StrList_ctor();
+    STRUCT_LIST = StrList_ctor();
     FUNC_PREDEF_LIST = StrList_ctor();
+    FUNC_LIST = StrList_ctor();
 
     yyparse();
 
     StrList_printf(&INCLUDE_LIST, "%s\n");
     puts("");
+    StrList_printf(&STRUCT_LIST, "%s\n\n");
     StrList_printf(&FUNC_PREDEF_LIST, "%s\n");
     puts("");
     StrList_printf(&FUNC_LIST, "%s\n\n");
 
     StrList_dtor(&INCLUDE_LIST);
+    StrList_dtor(&STRUCT_LIST);
     StrList_dtor(&FUNC_PREDEF_LIST);
+    StrList_dtor(&FUNC_LIST);
 }

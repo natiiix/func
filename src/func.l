@@ -26,6 +26,7 @@
 [\(\)]                          CHAR_TOKEN
 
 "func"                          TOKEN(KW_FUNC)
+"struct"                        TOKEN(KW_STRUCT)
 "if"                            TOKEN(KW_IF)
 "while"                         TOKEN(KW_WHILE)
 
