@@ -2,10 +2,10 @@
 
 all: func
 
-func: src/func.l src/func.y
+func: $(wildcard src/*)
 	flex src/func.l
 	bison -d src/func.y --verbose
-	gcc -Wall -Wextra -o func func.tab.c lex.yy.c src/strlist.c
+	gcc -Wall -Wextra -o func func.tab.c lex.yy.c $(wildcard src/*.c)
 
 clean:
 	rm func.tab.c lex.yy.c func.tab.h func func.output example.c example

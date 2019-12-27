@@ -6,6 +6,8 @@
     #include <string.h>
     #include <stdarg.h>
 
+    #include "src/strlist.h"
+
     extern int yylex();
     extern int yyparse();
     extern FILE* yyin;
@@ -13,6 +15,10 @@
     void yyerror(const char* const err);
 
     char* strformat(const char* const format, ...);
+
+    StrList_t INCLUDE_LIST;
+    StrList_t FUNC_PREDEF_LIST;
+    StrList_t FUNC_LIST;
 %}
 
 %define parse.error verbose
@@ -25,22 +31,22 @@
 
 %token KW_INCLUDE KW_FUNC KW_IF KW_LOOP
 
-%type<strval> module top_level_statement statement_block statement
+%type<strval> statement_block statement
 %type<strval> func_params param_list param_list_next pointers operator
 %type<strval> call_args call_args_next expression arith_expr basic_value
 
 %%
 
-translation_unit: module                { puts($1); }
+translation_unit: module
                 ;
 
-module:                                 { $$ = ""; }
-      | top_level_statement module      { $$ = strformat("%s\n%s", $1, $2); }
+module:
+      | top_level_statement module
       ;
 
 
-top_level_statement: '(' KW_INCLUDE T_ID ')'                                        { $$ = strformat("#include <%s.h>", $3); }
-                   | '(' KW_FUNC T_ID T_ID '(' func_params ')' statement_block ')'  { $$ = strformat("%s %s(%s) {\n%s}", $3, $4, $6, $8); }
+top_level_statement: '(' KW_INCLUDE T_ID ')'                                        { StrList_append(&INCLUDE_LIST, strformat("#include <%s.h>", $3)); }
+                   | '(' KW_FUNC T_ID T_ID '(' func_params ')' statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $3, $4, $6, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $3, $4, $6)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -116,5 +122,18 @@ char* strformat(const char* const format, ...) {
 
 int main(const int argc, const char* const* const argv) {
     yyin = stdin;
+
+    INCLUDE_LIST = StrList_ctor();
+    FUNC_PREDEF_LIST = StrList_ctor();
+
     yyparse();
+
+    StrList_printf(&INCLUDE_LIST, "%s\n");
+    puts("");
+    StrList_printf(&FUNC_PREDEF_LIST, "%s\n");
+    puts("");
+    StrList_printf(&FUNC_LIST, "%s\n\n");
+
+    StrList_dtor(&INCLUDE_LIST);
+    StrList_dtor(&FUNC_PREDEF_LIST);
 }
