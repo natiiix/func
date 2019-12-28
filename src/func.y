@@ -59,7 +59,7 @@
 
 %token<strval> T_ID T_NUM T_STR T_CHAR
 %token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN
-%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE
+%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE KW_SIZEOF
 
 %type<strval> statement_block statement
 %type<strval> func_params param_list param_list_next struct_attributes var_def type pointers binary_operation
@@ -140,6 +140,7 @@ any_expr: elem_expr                     { $$ = $1; }
 
 elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); }
          | '(' arith_expr ')'               { $$ = strformat("(%s)", $2); }
+         | '(' KW_SIZEOF type ')'           { $$ = strformat("sizeof(%s)", $3); }
          | '[' any_expr ']'                 { $$ = strformat("(*%s)", $2); }
          | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
          | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
