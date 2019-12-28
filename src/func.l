@@ -29,6 +29,7 @@
 "if"                            TOKEN(KW_IF)
 "while"                         TOKEN(KW_WHILE)
 "sizeof"                        TOKEN(KW_SIZEOF)
+"type"                          TOKEN(KW_TYPE)
 
 [_a-zA-Z][_a-zA-Z0-9]*          STR_TOKEN(T_ID)
 [0-9]+(\.[0-9]+)?               STR_TOKEN(T_NUM)
