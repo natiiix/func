@@ -29,11 +29,11 @@
 }
 
 %token<strval> T_ID T_NUM T_STR T_CHAR T_BIN_OP T_ASSIGN_OP
-%token KW_FUNC KW_STRUCT KW_IF KW_WHILE
+%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE
 
 %type<strval> statement_block statement
 %type<strval> func_params param_list param_list_next struct_attributes var_def type pointers operator
-%type<strval> call_args any_expr elem_expr dollar_expr arith_expr basic_value
+%type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr basic_value
 
 %%
 
@@ -65,6 +65,7 @@ statement: elem_expr                                    { $$ = strformat("    %s
          | '{' statement_block '}'                      { $$ = strformat("{\n%s}\n", $2); }
          | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("%s%s;\n", $3, $4); }
          ;
 
 func_params:                            { $$ = "void"; }
@@ -91,6 +92,10 @@ type: T_ID pointers                     { $$ = strformat("%s%s", $1, $2); }
 pointers:                               { $$ = ""; }
         | '*' pointers                  { $$ = strformat("*%s", $2); }
         ;
+
+var_assign:                             { $$ = ""; }
+          | any_expr                    { $$ = strformat(" = %s", $1); }
+          ;
 
 call_args:                              { $$ = ""; }
          | dollar_expr                  { $$ = $1; }
@@ -145,7 +150,8 @@ char* strformat(const char* const format, ...) {
     return s;
 }
 
-int main(const int argc, const char* const* const argv) {
+// int main(const int argc, const char* const* const argv) {
+int main(void) {
     yyin = stdin;
 
     INCLUDE_LIST = StrList_ctor();
