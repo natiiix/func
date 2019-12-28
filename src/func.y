@@ -17,8 +17,9 @@
     char* strformat(const char* const format, ...);
 
     StrList_t INCLUDE_LIST;
+    StrList_t STRUCT_FORWARD_LIST;
     StrList_t STRUCT_LIST;
-    StrList_t FUNC_PREDEF_LIST;
+    StrList_t FUNC_FORWARD_LIST;
     StrList_t FUNC_LIST;
 
     struct LinkedStr_t {
@@ -84,8 +85,8 @@ top_level_statement_block:
                          | top_level_statement top_level_statement_block
                          ;
 
-top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_PREDEF_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
-                   | '(' KW_STRUCT T_ID struct_attributes ')'                       { StrList_append(&STRUCT_LIST, strformat("typedef struct {\n%s} %s;", $4, $3)); }
+top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
+                   | '(' KW_STRUCT T_ID struct_attributes ')'                       { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, $4)); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -196,20 +197,22 @@ int main(void) {
 
     INCLUDE_LIST = StrList_ctor();
     STRUCT_LIST = StrList_ctor();
-    FUNC_PREDEF_LIST = StrList_ctor();
+    FUNC_FORWARD_LIST = StrList_ctor();
     FUNC_LIST = StrList_ctor();
 
     yyparse();
 
     StrList_printf(&INCLUDE_LIST, "%s\n");
     puts("");
+    StrList_printf(&STRUCT_FORWARD_LIST, "%s\n");
+    puts("");
     StrList_printf(&STRUCT_LIST, "%s\n\n");
-    StrList_printf(&FUNC_PREDEF_LIST, "%s\n");
+    StrList_printf(&FUNC_FORWARD_LIST, "%s\n");
     puts("");
     StrList_printf(&FUNC_LIST, "%s\n\n");
 
     StrList_dtor(&INCLUDE_LIST);
     StrList_dtor(&STRUCT_LIST);
-    StrList_dtor(&FUNC_PREDEF_LIST);
+    StrList_dtor(&FUNC_FORWARD_LIST);
     StrList_dtor(&FUNC_LIST);
 }
