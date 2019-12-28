@@ -138,12 +138,14 @@ any_expr: elem_expr                     { $$ = $1; }
         | dollar_expr                   { $$ = $1; }
         ;
 
-elem_expr: '(' T_ID call_args ')'       { $$ = strformat("%s(%s)", $2, $3); }
-         | '(' arith_expr ')'           { $$ = strformat("(%s)", $2); }
-         | '[' any_expr ']'             { $$ = strformat("(*%s)", $2); }
-         | '[' elem_expr any_expr ']'   { $$ = strformat("(%s[%s])", $2, $3); }
-         | elem_expr '.' T_ID           { $$ = strformat("(%s.%s)", $1, $3); }
-         | basic_value                  { $$ = $1; }
+elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); }
+         | '(' arith_expr ')'               { $$ = strformat("(%s)", $2); }
+         | '[' any_expr ']'                 { $$ = strformat("(*%s)", $2); }
+         | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
+         | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
+         | '[' '*' elem_expr any_expr ']'   { $$ = strformat("(&(%s[%s]))", $3, $4); }
+         | elem_expr '.' T_ID               { $$ = strformat("(%s.%s)", $1, $3); }
+         | basic_value                      { $$ = $1; }
          ;
 
 dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
