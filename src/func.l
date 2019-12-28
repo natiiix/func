@@ -38,7 +38,7 @@
 (==|!=|<|>|<=|>=|\+|-|\/|%)     STR_TOKEN(T_BIN_OP)
 (=|\+=|-=|\*=|\/=|%=|&=|\|=)    STR_TOKEN(T_ASSIGN_OP)
 
-[{}\*,\[\]]                     CHAR_TOKEN
+[{}\*\$,\[\]]                   CHAR_TOKEN
 
 [ \t\r\n]+                      IGNORE_TOKEN
 

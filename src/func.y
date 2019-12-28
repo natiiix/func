@@ -29,12 +29,11 @@
 }
 
 %token<strval> T_ID T_NUM T_STR T_CHAR T_BIN_OP T_ASSIGN_OP
-
 %token KW_FUNC KW_STRUCT KW_IF KW_WHILE
 
 %type<strval> statement_block statement
 %type<strval> func_params param_list param_list_next struct_attributes var_def type pointers operator
-%type<strval> call_args call_args_next expression arith_expr basic_value
+%type<strval> call_args any_expr elem_expr dollar_expr arith_expr basic_value
 
 %%
 
@@ -62,10 +61,10 @@ statement_block:                                { $$ = ""; }
                | statement statement_block      { $$ = strformat("%s%s", $1, $2); }
                ;
 
-statement: expression                                       { $$ = strformat("    %s;\n", $1); }
-         | '{' statement_block '}'                          { $$ = strformat("{\n%s}\n", $2); }
-         | '(' KW_IF expression statement statement ')'     { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
-         | '(' KW_WHILE expression statement_block ')'      { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
+statement: elem_expr                                    { $$ = strformat("    %s;\n", $1); }
+         | '{' statement_block '}'                      { $$ = strformat("{\n%s}\n", $2); }
+         | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
+         | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          ;
 
 func_params:                            { $$ = "void"; }
@@ -94,21 +93,26 @@ pointers:                               { $$ = ""; }
         ;
 
 call_args:                              { $$ = ""; }
-         | expression call_args_next    { $$ = strformat("%s%s", $1, $2); }
+         | dollar_expr                  { $$ = $1; }
+         | elem_expr call_args          { $$ = $2[0] ? strformat("%s, %s", $1, $2) : $1; }
          ;
 
-call_args_next:                             { $$ = ""; }
-              | expression call_args_next   { $$ = strformat(", %s%s", $1, $2); }
-              ;
+any_expr: elem_expr                     { $$ = $1; }
+        | dollar_expr                   { $$ = $1; }
+        ;
 
-expression: '(' T_ID call_args ')'          { $$ = strformat("%s(%s)", $2, $3); }
-          | '(' arith_expr ')'              { $$ = strformat("(%s)", $2); }
-          | '[' expression ']'              { $$ = strformat("(*%s)", $2); }
-          | '[' expression expression ']'   { $$ = strformat("(%s[%s])", $2, $3); }
-          | basic_value                     { $$ = $1; }
-          ;
+elem_expr: '(' T_ID call_args ')'       { $$ = strformat("%s(%s)", $2, $3); }
+         | '(' arith_expr ')'           { $$ = strformat("(%s)", $2); }
+         | '[' any_expr ']'             { $$ = strformat("(*%s)", $2); }
+         | '[' elem_expr any_expr ']'   { $$ = strformat("(%s[%s])", $2, $3); }
+         | basic_value                  { $$ = $1; }
+         ;
 
-arith_expr: operator expression expression   { $$ = strformat("%s %s %s", $2, $1, $3); }
+dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
+           | '$' arith_expr             { $$ = strformat("(%s)", $2); }
+           ;
+
+arith_expr: operator elem_expr any_expr { $$ = strformat("%s %s %s", $2, $1, $3); }
           ;
 
 basic_value: T_ID                       { $$ = $1; }
