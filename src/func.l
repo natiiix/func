@@ -23,8 +23,6 @@
 
 "//"[^\n]*                      IGNORE_TOKEN
 
-[\(\)]                          CHAR_TOKEN
-
 "func"                          TOKEN(KW_FUNC)
 "var"                           TOKEN(KW_VAR)
 "struct"                        TOKEN(KW_STRUCT)
@@ -36,10 +34,12 @@
 \"([^\\\"]|\\.)*\"              STR_TOKEN(T_STR)
 '([^\\']|\\.)'                  STR_TOKEN(T_CHAR)
 
-(==|!=|<|>|<=|>=|\+|-|\/|%)     STR_TOKEN(T_BIN_OP)
-(=|\+=|-=|\*=|\/=|%=|&=|\|=)    STR_TOKEN(T_ASSIGN_OP)
+("++"|"--")                                             STR_TOKEN(OP_UNARY)
+("=="|"!="|"<="|">="|"<"|">")                           STR_TOKEN(OP_COMPARE)
+("="|"+="|"-="|"*="|"/="|"%="|"&="|"|="|"<<="|">>=")    STR_TOKEN(OP_ASSIGN)
+("+"|"-"|"/"|"%"|"&&"|"||"|"&"|"|"|"<<"|">>")           STR_TOKEN(OP_BINARY)
 
-[{}\*\$,\[\]]                   CHAR_TOKEN
+[\(\)\[\]{}\*\$,]               CHAR_TOKEN
 
 [ \t\r\n]+                      IGNORE_TOKEN
 

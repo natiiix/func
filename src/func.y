@@ -20,20 +20,51 @@
     StrList_t STRUCT_LIST;
     StrList_t FUNC_PREDEF_LIST;
     StrList_t FUNC_LIST;
+
+    struct LinkedStr_t {
+        const char* const str;
+        const struct LinkedStr_t* const next;
+    };
+
+    const struct LinkedStr_t* newLinkedStr(const char* const str, const struct LinkedStr_t* const next) {
+        const struct LinkedStr_t linkedstr = { .str = str, .next = next };
+        struct LinkedStr_t* copy = malloc(sizeof(struct LinkedStr_t));
+        return memcpy(copy, &linkedstr, sizeof(struct LinkedStr_t));
+    }
+
+    const char* joinLinkedStrBinOp(const struct LinkedStr_t* const ls, const char* const op) {
+        return ls->next ? strformat("%s %s %s", ls->str, op, joinLinkedStrBinOp(ls->next, op)) : ls->str;
+    }
+
+    const char* joinLinkedStrCompOp(const struct LinkedStr_t* const ls, const char* const op) {
+        if (ls->next) {
+            if (ls->next->next) {
+                return strformat("(%s %s %s) && %s", ls->str, op, ls->next->str, joinLinkedStrCompOp(ls->next, op));
+            } else {
+                return strformat("(%s %s %s)", ls->str, op, joinLinkedStrCompOp(ls->next, op));
+            }
+        } else {
+            return ls->str;
+        }
+    }
 %}
 
 %define parse.error verbose
 
 %union {
     const char* strval;
+    const struct LinkedStr_t* linkedstr;
 }
 
-%token<strval> T_ID T_NUM T_STR T_CHAR T_BIN_OP T_ASSIGN_OP
+%token<strval> T_ID T_NUM T_STR T_CHAR
+%token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN
 %token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE
 
 %type<strval> statement_block statement
-%type<strval> func_params param_list param_list_next struct_attributes var_def type pointers operator
+%type<strval> func_params param_list param_list_next struct_attributes var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr basic_value
+
+%type<linkedstr> operands operands_next
 
 %%
 
@@ -117,8 +148,18 @@ dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
            | '$' arith_expr             { $$ = strformat("(%s)", $2); }
            ;
 
-arith_expr: operator elem_expr any_expr { $$ = strformat("%s %s %s", $2, $1, $3); }
+arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
+          | OP_ASSIGN elem_expr any_expr    { $$ = strformat("%s %s %s", $2, $1, $3); }
+          | binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
+          | OP_COMPARE operands             { $$ = joinLinkedStrCompOp($2, $1); }
           ;
+
+operands: elem_expr operands_next       { $$ = newLinkedStr($1, $2); }
+        ;
+
+operands_next: any_expr                 { $$ = newLinkedStr($1, NULL); }
+             | operands                 { $$ = $1; }
+             ;
 
 basic_value: T_ID                       { $$ = $1; }
            | T_NUM                      { $$ = $1; }
@@ -126,10 +167,9 @@ basic_value: T_ID                       { $$ = $1; }
            | T_CHAR                     { $$ = $1; }
            ;
 
-operator: T_BIN_OP                      { $$ = $1; }
-        | T_ASSIGN_OP                   { $$ = $1; }
-        | '*'                           { $$ = "*"; }
-        ;
+binary_operation: OP_BINARY             { $$ = $1; }
+                | '*'                   { $$ = "*"; }
+                ;
 
 %%
 
