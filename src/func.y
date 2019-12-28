@@ -142,6 +142,7 @@ elem_expr: '(' T_ID call_args ')'       { $$ = strformat("%s(%s)", $2, $3); }
          | '(' arith_expr ')'           { $$ = strformat("(%s)", $2); }
          | '[' any_expr ']'             { $$ = strformat("(*%s)", $2); }
          | '[' elem_expr any_expr ']'   { $$ = strformat("(%s[%s])", $2, $3); }
+         | elem_expr '.' T_ID           { $$ = strformat("(%s.%s)", $1, $3); }
          | basic_value                  { $$ = $1; }
          ;
 
