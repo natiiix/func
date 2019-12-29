@@ -11,6 +11,6 @@ clean:
 	rm func.tab.c lex.yy.c func.tab.h func func.output example.c example
 
 test: func example.func
-	./func < example.func > example.c
+	./func example.func example.c
 	gcc example.c -o example
 
