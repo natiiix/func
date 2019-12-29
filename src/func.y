@@ -97,11 +97,11 @@ statement: elem_expr                                    { $$ = strformat("    %s
          | '(' KW_DO statement_block ')'                { $$ = strformat("{\n%s}\n", $3); }
          | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
-         | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("%s%s;\n", $3, $4); }
-         | '(' KW_RETURN ')'                            { $$ = "return;\n"; }
-         | '(' KW_RETURN any_expr ')'                   { $$ = strformat("return %s;\n", $3); }
-         | '(' KW_BREAK ')'                             { $$ = "break;\n"; }
-         | '(' KW_CONTINUE ')'                          { $$ = "continue;\n"; }
+         | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("    %s%s;\n", $3, $4); }
+         | '(' KW_RETURN ')'                            { $$ = "    return;\n"; }
+         | '(' KW_RETURN any_expr ')'                   { $$ = strformat("    return %s;\n", $3); }
+         | '(' KW_BREAK ')'                             { $$ = "    break;\n"; }
+         | '(' KW_CONTINUE ')'                          { $$ = "    continue;\n"; }
          ;
 
 func_params:                            { $$ = "void"; }
@@ -207,9 +207,21 @@ char* strformat(const char* const format, ...) {
     return s;
 }
 
-// int main(const int argc, const char* const* const argv) {
-int main(void) {
-    yyin = stdin;
+int main(const int argc, const char* const* const argv) {
+    if (argc == 1 || (argc == 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))) {
+        puts("Usage: func <input FunC file> <output .c file> [output .h file]");
+        return 0;
+    }
+
+    if (argc != 3) {
+        fprintf(stderr, "Invalid number of command-line arguments (expected 3, got %d)\n", argc - 1);
+        return -1;
+    }
+
+    if (!(yyin = fopen(argv[1], "r"))) {
+        fprintf(stderr, "Unable to open input file: \"%s\"\n", argv[1]);
+        return -1;
+    }
 
     INCLUDE_LIST = StrList_ctor();
     STRUCT_LIST = StrList_ctor();
@@ -217,15 +229,26 @@ int main(void) {
     FUNC_LIST = StrList_ctor();
 
     yyparse();
+    fclose(yyin);
 
-    StrList_printf(&INCLUDE_LIST, "%s\n");
-    puts("");
-    StrList_printf(&STRUCT_FORWARD_LIST, "%s\n");
-    puts("");
-    StrList_printf(&STRUCT_LIST, "%s\n\n");
-    StrList_printf(&FUNC_FORWARD_LIST, "%s\n");
-    puts("");
-    StrList_printf(&FUNC_LIST, "%s\n\n");
+    FILE* const fc = fopen(argv[2], "w");
+    if (!fc) {
+        fprintf(stderr, "Unable to open output .c file: \"%s\"\n", argv[2]);
+        return -1;
+    }
+
+    StrList_fjoin(&INCLUDE_LIST, fc, "\n");
+    fputs("\n\n", fc);
+    StrList_fjoin(&STRUCT_FORWARD_LIST, fc, "\n");
+    fputs("\n\n", fc);
+    StrList_fjoin(&STRUCT_LIST, fc, "\n\n");
+    fputs("\n\n", fc);
+    StrList_fjoin(&FUNC_FORWARD_LIST, fc, "\n");
+    fputs("\n\n", fc);
+    StrList_fjoin(&FUNC_LIST, fc, "\n\n");
+    fputs("\n", fc);
+
+    fclose(fc);
 
     StrList_dtor(&INCLUDE_LIST);
     StrList_dtor(&STRUCT_LIST);
