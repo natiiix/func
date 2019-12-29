@@ -38,9 +38,12 @@
 )
 
 (func fact (n int) int
-    (if (<= n 0)
-        (return 1)
-        (return $ * n $ fact $ - n 1)
+    (return $ $
+        (< n 0)
+            0
+        (< 0 n 2)
+            1
+            (* n $ fact $ - n 1)
     )
 )
 
