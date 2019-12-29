@@ -29,8 +29,7 @@
 
     const struct LinkedStr_t* newLinkedStr(const char* const str, const struct LinkedStr_t* const next) {
         const struct LinkedStr_t linkedstr = { .str = str, .next = next };
-        struct LinkedStr_t* copy = malloc(sizeof(struct LinkedStr_t));
-        return memcpy(copy, &linkedstr, sizeof(struct LinkedStr_t));
+        return memcpy(malloc(sizeof(struct LinkedStr_t)), &linkedstr, sizeof(struct LinkedStr_t));
     }
 
     const char* joinLinkedStrBinOp(const struct LinkedStr_t* const ls, const char* const op) {
@@ -39,11 +38,10 @@
 
     const char* joinLinkedStrCompOp(const struct LinkedStr_t* const ls, const char* const op) {
         if (ls->next) {
-            if (ls->next->next) {
-                return strformat("(%s %s %s) && %s", ls->str, op, ls->next->str, joinLinkedStrCompOp(ls->next, op));
-            } else {
-                return strformat("(%s %s %s)", ls->str, op, joinLinkedStrCompOp(ls->next, op));
-            }
+            const char* const strNext = joinLinkedStrCompOp(ls->next, op);
+            return ls->next->next ?
+                strformat("(%s %s %s) && %s", ls->str, op, ls->next->str, strNext) :
+                strformat("(%s %s %s)", ls->str, op, strNext);
         } else {
             return ls->str;
         }
