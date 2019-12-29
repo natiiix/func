@@ -61,7 +61,7 @@
 
 %type<strval> statement_block statement
 %type<strval> else_if func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
-%type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr basic_value
+%type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr ternary basic_value
 
 %type<linkedstr> operands operands_next
 
@@ -152,6 +152,7 @@ elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); 
          | '(' arith_expr ')'               { $$ = strformat("(%s)", $2); }
          | '(' KW_SIZEOF type ')'           { $$ = strformat("sizeof(%s)", $3); }
          | '(' KW_TYPE type any_expr ')'    { $$ = strformat("((%s)%s)", $3, $4); }
+         | '(' '$' ternary ')'              { $$ = $3; }
          | '[' any_expr ']'                 { $$ = strformat("(*%s)", $2); }
          | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
          | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
@@ -165,6 +166,7 @@ dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
            | '$' arith_expr             { $$ = strformat("(%s)", $2); }
            | '$' KW_SIZEOF type         { $$ = strformat("sizeof(%s)", $3); }
            | '$' KW_TYPE type any_expr  { $$ = strformat("((%s)%s)", $3, $4); }
+           | '$' '$' ternary            { $$ = $3; }
            ;
 
 arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
@@ -172,6 +174,10 @@ arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); 
           | binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
           | OP_COMPARE operands             { $$ = joinLinkedStrCompOp($2, $1); }
           ;
+
+ternary: any_expr                       { $$ = $1; }
+       | elem_expr elem_expr ternary    { $$ = strformat("(%s ? %s : %s)", $1, $2, $3); }
+       ;
 
 operands: elem_expr operands_next       { $$ = newLinkedStr($1, $2); }
         ;
