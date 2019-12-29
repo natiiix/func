@@ -28,6 +28,9 @@
     (printf "%d\n" (+ 1 2 3 4))
     (printf "%d\n" (+ 1 2 3 4 5))
 
+    (printf "%d\n" (! $ ! $ + 1 2 3 4 5))
+    (printf "%d\n" (!= 1 2 3 4 5))
+
     (var s String_t (str_ctor "Hello World!"))
     (printf "\"%s\" -- length: %lu\n" s.ptr s.length)
 

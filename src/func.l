@@ -40,7 +40,7 @@
 \"([^\\\"]|\\.)*\"              STR_TOKEN(T_STR)
 '([^\\']|\\.)'                  STR_TOKEN(T_CHAR)
 
-("++"|"--")                                             STR_TOKEN(OP_UNARY)
+("++"|"--"|"!")                                         STR_TOKEN(OP_UNARY)
 ("=="|"!="|"<="|">="|"<"|">")                           STR_TOKEN(OP_COMPARE)
 ("="|"+="|"-="|"*="|"/="|"%="|"&="|"|="|"<<="|">>=")    STR_TOKEN(OP_ASSIGN)
 ("+"|"-"|"/"|"%"|"&&"|"||"|"&"|"|"|"<<"|">>")           STR_TOKEN(OP_BINARY)
