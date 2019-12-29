@@ -59,7 +59,7 @@
 
 %token<strval> T_ID T_NUM T_STR T_CHAR
 %token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN
-%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE KW_SIZEOF KW_TYPE
+%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
 %type<strval> func_params param_list param_list_next struct_attributes var_def type pointers binary_operation
@@ -98,6 +98,10 @@ statement: elem_expr                                    { $$ = strformat("    %s
          | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("%s%s;\n", $3, $4); }
+         | '(' KW_RETURN ')'                            { $$ = "return;\n"; }
+         | '(' KW_RETURN any_expr ')'                   { $$ = strformat("return %s;\n", $3); }
+         | '(' KW_BREAK ')'                             { $$ = "break;\n"; }
+         | '(' KW_CONTINUE ')'                          { $$ = "continue;\n"; }
          ;
 
 func_params:                            { $$ = "void"; }

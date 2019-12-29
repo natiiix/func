@@ -30,6 +30,9 @@
 "while"                         TOKEN(KW_WHILE)
 "sizeof"                        TOKEN(KW_SIZEOF)
 "type"                          TOKEN(KW_TYPE)
+"return"                        TOKEN(KW_RETURN)
+"break"                         TOKEN(KW_BREAK)
+"continue"                      TOKEN(KW_CONTINUE)
 
 [_a-zA-Z][_a-zA-Z0-9]*          STR_TOKEN(T_ID)
 [0-9]+(\.[0-9]+)?               STR_TOKEN(T_NUM)
