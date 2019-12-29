@@ -37,14 +37,12 @@
     (return 0)
 )
 
-(func fact (n int) int
-    (return $ $
-        (< n 0)
-            0
-        (< 0 n 2)
-            1
-            (* n $ fact $ - n 1)
-    )
+(func fact (n int) int $
+    (< n 0)
+        0
+    (< 0 n 2)
+        1
+        (* n $ fact $ - n 1)
 )
 
 (struct String_t
