@@ -61,7 +61,7 @@
 
 %type<strval> statement_block statement
 %type<strval> else_if func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
-%type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr ternary basic_value
+%type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ternary basic_value
 
 %type<linkedstr> operands operands_next
 
@@ -148,11 +148,7 @@ any_expr: elem_expr                     { $$ = $1; }
         | dollar_expr                   { $$ = $1; }
         ;
 
-elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); }
-         | '(' arith_expr ')'               { $$ = strformat("(%s)", $2); }
-         | '(' KW_SIZEOF type ')'           { $$ = strformat("sizeof(%s)", $3); }
-         | '(' KW_TYPE type any_expr ')'    { $$ = strformat("((%s)%s)", $3, $4); }
-         | '(' '$' ternary ')'              { $$ = $3; }
+elem_expr: '(' round_expr ')'               { $$ = $2; }
          | '[' any_expr ']'                 { $$ = strformat("(*%s)", $2); }
          | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
          | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
@@ -162,12 +158,15 @@ elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); 
          | basic_value                      { $$ = $1; }
          ;
 
-dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
-           | '$' arith_expr             { $$ = strformat("(%s)", $2); }
-           | '$' KW_SIZEOF type         { $$ = strformat("sizeof(%s)", $3); }
-           | '$' KW_TYPE type any_expr  { $$ = strformat("((%s)%s)", $3, $4); }
-           | '$' '$' ternary            { $$ = $3; }
+dollar_expr: '$' round_expr             { $$ = $2; }
            ;
+
+round_expr: T_ID call_args              { $$ = strformat("%s(%s)", $1, $2); }
+          | arith_expr                  { $$ = strformat("(%s)", $1); }
+          | KW_SIZEOF type              { $$ = strformat("sizeof(%s)", $2); }
+          | KW_TYPE type any_expr       { $$ = strformat("((%s)%s)", $2, $3); }
+          | '$' ternary                 { $$ = $2; }
+          ;
 
 arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
           | OP_ASSIGN elem_expr any_expr    { $$ = strformat("%s %s %s", $2, $1, $3); }
