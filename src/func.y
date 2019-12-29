@@ -62,7 +62,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
+%type<strval> else_if func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr basic_value
 
 %type<linkedstr> operands operands_next
@@ -95,7 +95,7 @@ statement_block:                                { $$ = ""; }
 
 statement: elem_expr                                    { $$ = strformat("    %s;\n", $1); }
          | '(' KW_DO statement_block ')'                { $$ = strformat("{\n%s}\n", $3); }
-         | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
+         | '(' KW_IF elem_expr statement else_if ')'    { $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("    %s%s;\n", $3, $4); }
          | '(' KW_RETURN ')'                            { $$ = "    return;\n"; }
@@ -103,6 +103,10 @@ statement: elem_expr                                    { $$ = strformat("    %s
          | '(' KW_BREAK ')'                             { $$ = "    break;\n"; }
          | '(' KW_CONTINUE ')'                          { $$ = "    continue;\n"; }
          ;
+
+else_if:                                { $$ = ""; }
+       | statement                      { $$ = strformat("else {\n%s}\n", $1); }
+       | elem_expr statement else_if    { $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
 
 func_params:                            { $$ = "void"; }
            | param_list                 { $$ = $1; }
