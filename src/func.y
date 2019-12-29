@@ -60,7 +60,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> else_if func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
+%type<strval> else_if func_body func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ternary basic_value
 
 %type<linkedstr> operands operands_next
@@ -83,8 +83,8 @@ top_level_statement_block:
                          | top_level_statement top_level_statement_block
                          ;
 
-top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type statement_block ')'  { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
-                   | '(' KW_STRUCT T_ID struct_attributes ')'                       { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, $4)); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
+top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
+                   | '(' KW_STRUCT T_ID struct_attributes ')'                   { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, $4)); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -105,6 +105,11 @@ statement: elem_expr                                    { $$ = strformat("    %s
 else_if:                                { $$ = ""; }
        | statement                      { $$ = strformat("else {\n%s}\n", $1); }
        | elem_expr statement else_if    { $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
+       ;
+
+func_body: statement_block              { $$ = $1; }
+         | '$' ternary                  { $$ = strformat("    return %s;\n", $2); }
+         ;
 
 func_params:                            { $$ = "void"; }
            | param_list                 { $$ = $1; }
