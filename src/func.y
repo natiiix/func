@@ -59,10 +59,10 @@
 
 %token<strval> T_ID T_NUM T_STR T_CHAR
 %token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN
-%token KW_FUNC KW_VAR KW_STRUCT KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
+%token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> func_params param_list param_list_next struct_attributes var_def type pointers binary_operation
+%type<strval> func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr arith_expr basic_value
 
 %type<linkedstr> operands operands_next
@@ -94,7 +94,7 @@ statement_block:                                { $$ = ""; }
                ;
 
 statement: elem_expr                                    { $$ = strformat("    %s;\n", $1); }
-         | '{' statement_block '}'                      { $$ = strformat("{\n%s}\n", $2); }
+         | '(' KW_DO statement_block ')'                { $$ = strformat("{\n%s}\n", $3); }
          | '(' KW_IF elem_expr statement statement ')'  { $$ = strformat("if (%s) {\n%s}\nelse {\n%s}\n", $3, $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          | '(' KW_VAR var_def var_assign ')'            { $$ = strformat("%s%s;\n", $3, $4); }
@@ -118,6 +118,10 @@ param_list_next:                        { $$ = ""; }
 struct_attributes:                                      { $$ = ""; }
                  | '(' var_def ')' struct_attributes    { $$ = strformat("    %s;\n%s", $2, $4); }
                  ;
+
+struct_attr_values:                                             { $$ = ""; }
+                  | '(' T_ID any_expr ')' struct_attr_values    { $$ = strformat(".%s = %s, %s", $2, $3, $5); }
+                  ;
 
 var_def: T_ID type                      { $$ = strformat("%s %s", $2, $1); }
        ;
@@ -150,12 +154,15 @@ elem_expr: '(' T_ID call_args ')'           { $$ = strformat("%s(%s)", $2, $3); 
          | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
          | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
          | '[' '*' elem_expr any_expr ']'   { $$ = strformat("(&(%s[%s]))", $3, $4); }
+         | '{' struct_attr_values '}'       { $$ = strformat("{%s}", $2); }
          | elem_expr '.' T_ID               { $$ = strformat("(%s.%s)", $1, $3); }
          | basic_value                      { $$ = $1; }
          ;
 
 dollar_expr: '$' T_ID call_args         { $$ = strformat("%s(%s)", $2, $3); }
            | '$' arith_expr             { $$ = strformat("(%s)", $2); }
+           | '$' KW_SIZEOF type         { $$ = strformat("sizeof(%s)", $3); }
+           | '$' KW_TYPE type any_expr  { $$ = strformat("((%s)%s)", $3, $4); }
            ;
 
 arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }

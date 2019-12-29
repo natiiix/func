@@ -1,16 +1,16 @@
-[stdio]
+[stdio string]
 
 (func main (argc int, argv char**) int
     (puts [argv])
     (printf "[...%s]\n" [* [argv] 3])
 
     (if (> argc 1)
-        {
+        (do
             (var i int 0)
             (while (> argc $ ++ i)
                 (printf "%s\n" [argv i])
             )
-        }
+        )
         (puts "Hello World!")
     )
 
@@ -28,6 +28,9 @@
     (printf "%d\n" (+ 1 2 3 4))
     (printf "%d\n" (+ 1 2 3 4 5))
 
+    (var s String_t (str_ctor "Hello World!"))
+    (printf "\"%s\" -- length: %lu\n" s.ptr s.length)
+
     (return 0)
 )
 
@@ -41,4 +44,11 @@
 (struct String_t
     (ptr char*)
     (length size_t)
+)
+
+(func str_ctor (str char*) String_t
+    (return $ type String_t {
+        (ptr str)
+        (length $ strlen str)
+    })
 )

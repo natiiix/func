@@ -26,6 +26,7 @@
 "func"                          TOKEN(KW_FUNC)
 "var"                           TOKEN(KW_VAR)
 "struct"                        TOKEN(KW_STRUCT)
+"do"                            TOKEN(KW_DO)
 "if"                            TOKEN(KW_IF)
 "while"                         TOKEN(KW_WHILE)
 "sizeof"                        TOKEN(KW_SIZEOF)
