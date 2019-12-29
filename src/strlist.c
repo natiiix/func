@@ -1,5 +1,4 @@
 #include "strlist.h"
-#include <stdio.h>
 #include <string.h>
 
 const size_t INIT_CAP = 64;
@@ -32,49 +31,15 @@ void StrList_append(StrList_t* const list, const char* const str)
     list->ptr[list->size++] = str;
 }
 
-char* StrList_join(StrList_t* const list, const char* const separator)
-{
-    const size_t sepLen = separator ? strlen(separator) : 0;
-
-    size_t totalLen = 0;
-    for (size_t i = 0; i < list->size; i++)
-    {
-        totalLen += strlen(list->ptr[i]);
-
-        if (i)
-        {
-            totalLen += sepLen;
-        }
-    }
-
-    char* const result = malloc(totalLen + 1);
-
-    size_t index = 0;
-    for (size_t i = 0; i < list->size; i++)
-    {
-        strcpy(&result[index], list->ptr[i]);
-        index += strlen(list->ptr[i]);
-
-        if (i)
-        {
-            strcpy(&result[index], separator);
-            index += sepLen;
-        }
-    }
-
-    if (index != totalLen)
-    {
-        free(result);
-        return NULL;
-    }
-
-    return result;
-}
-
-void StrList_printf(StrList_t* const list, const char* const format)
+void StrList_fjoin(StrList_t* const list, FILE* const f, const char* const separator)
 {
     for (size_t i = 0; i < list->size; i++)
     {
-        printf(format, list->ptr[i]);
+        if (i)
+        {
+            fputs(separator, f);
+        }
+
+        fputs(list->ptr[i], f);
     }
 }

@@ -2,6 +2,7 @@
 #define _STRLIST_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 typedef struct
@@ -15,7 +16,6 @@ StrList_t StrList_ctor(void);
 void StrList_dtor(const StrList_t* const list);
 
 void StrList_append(StrList_t* const list, const char* const str);
-char* StrList_join(StrList_t* const list, const char* const delimiter);
-void StrList_printf(StrList_t* const list, const char* const format);
+void StrList_fjoin(StrList_t* const list, FILE* const f, const char* const separator);
 
 #endif
