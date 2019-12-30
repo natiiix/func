@@ -17,3 +17,7 @@ Please use [this VS Code extension](https://marketplace.visualstudio.com/items?i
 ```
 
 See the [example FunC code file](example.func), which is used for testing purposes, to get a better idea of what this language looks like.
+
+## License
+
+The entire FunC project is licensed under the [MIT License](LICENSE), allowing everyone free use without any warranty.
