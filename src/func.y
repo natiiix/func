@@ -12,6 +12,8 @@
     extern int yyparse();
     extern FILE* yyin;
 
+    const char* infile;
+
     void yyerror(const char* const err);
 
     char* strformat(const char* const format, ...);
@@ -56,6 +58,7 @@
     }
 %}
 
+%locations
 %define parse.error verbose
 
 %union {
@@ -216,7 +219,7 @@ binary_operation: OP_BINARY             { $$ = $1; }
 %%
 
 void yyerror(const char* const err) {
-    fprintf(stderr, "Parser error: %s\n", err);
+    fprintf(stderr, "%s:%d:%d -- Parser Error: %s\n", infile, yylloc.first_line, yylloc.first_column, err);
     exit(-1);
 }
 
@@ -249,8 +252,8 @@ int main(const int argc, const char* const* const argv) {
     FUNC_LIST = StrList_ctor();
 
     for (int i = 2; i < argc; i++) {
-        if (!(yyin = fopen(argv[i], "r"))) {
-            fprintf(stderr, "Unable to open input file: \"%s\"\n", argv[i]);
+        if (!(yyin = fopen(infile = argv[i], "r"))) {
+            fprintf(stderr, "Unable to open input file: \"%s\"\n", infile);
             return -1;
         }
 

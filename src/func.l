@@ -6,15 +6,16 @@
     #include <string.h>
     #include <stdint.h>
 
-    #define STR_TOKEN(_TOKEN_TYPE) { count(); yylval.strval = strdup(yytext); return _TOKEN_TYPE; }
-    #define TOKEN(_TOKEN_TYPE) { count(); return _TOKEN_TYPE; }
-    #define IGNORE_TOKEN { count(); }
-    #define CHAR_TOKEN { count(); return yytext[0]; }
+    #define STR_TOKEN(_TOKEN_TYPE) { yylval.strval = strdup(yytext); return _TOKEN_TYPE; }
+    #define TOKEN(_TOKEN_TYPE) { return _TOKEN_TYPE; }
+    #define IGNORE_TOKEN { }
+    #define CHAR_TOKEN { return yytext[0]; }
 
-    size_t line = 1;
-    size_t column = 1;
+    extern const char* infile;
 
     void count(void);
+
+    #define YY_USER_ACTION count();
 %}
 
 %option noyywrap
@@ -54,11 +55,27 @@
 
 [ \t\r\n]+                      IGNORE_TOKEN
 
-[.\n]+                          { fprintf(stderr, "Lexer error at line %zu column %zu: unexpected token \"%.16s...\"\n", line, column, yytext); exit(-1); }
+.|\n                            { fprintf(stderr, "%s:%d:%d -- Lexer Error: unexpected character '%c'\n", infile, yylloc.first_line, yylloc.first_column, yytext[0]); exit(-1); }
 
 %%
 
 void count(void) {
+    static const char* prev_infile = NULL;
+    static int line = 0;
+    static int column = 0;
+
+    // It is necessary to reset the location counters
+    // when the input file changes to a new file.
+    // NOTE: I know this is pointer comparison, it's fine.
+    if (infile != prev_infile) {
+        prev_infile = infile;
+        line = 1;
+        column = 1;
+    }
+
+    yylloc.first_line = line;
+    yylloc.first_column = column;
+
     for (size_t i = 0; yytext[i]; i++) {
         if (yytext[i] == '\n') {
             line++;
@@ -67,4 +84,7 @@ void count(void) {
             column++;
         }
     }
+
+    yylloc.last_line = line;
+    yylloc.last_column = column - 1;
 }
