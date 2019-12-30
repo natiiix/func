@@ -72,7 +72,7 @@
 
 %type<strval> statement_block statement
 %type<strval> elem_or_var_def var_def_stat for_head else_if func_body func_params struct_attr_values var_def type pointers binary_operation
-%type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ternary basic_value
+%type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ptr_member ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
 
@@ -176,6 +176,7 @@ elem_expr: '(' round_expr ')'               { $$ = $2; }
          | '[' '*' elem_expr any_expr ']'   { $$ = strformat("(&(%s[%s]))", $3, $4); }
          | '{' struct_attr_values '}'       { $$ = strformat("{%s}", $2); }
          | elem_expr '.' T_ID               { $$ = strformat("(%s.%s)", $1, $3); }
+         | elem_expr '.' '[' ptr_member ']' { $$ = strformat("(%s%s)", $1, $4); }
          | basic_value                      { $$ = $1; }
          ;
 
@@ -193,6 +194,10 @@ arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); 
           | OP_ASSIGN elem_expr any_expr    { $$ = strformat("%s %s %s", $2, $1, $3); }
           | binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
           | OP_COMPARE operands             { $$ = joinLinkedStrCompOp($2, $1); }
+          ;
+
+ptr_member:                             { $$ = ""; }
+          | T_ID ptr_member             { $$ = strformat("->%s%s", $1, $2); }
           ;
 
 ternary: any_expr                       { $$ = $1; }
