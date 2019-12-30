@@ -6,7 +6,7 @@
     #include <string.h>
     #include <stdarg.h>
 
-    #include "src/strlist.h"
+    #include "strlist.h"
 
     extern int yylex();
     extern int yyparse();
@@ -234,17 +234,12 @@ char* strformat(const char* const format, ...) {
 
 int main(const int argc, const char* const* const argv) {
     if (argc == 1 || (argc == 2 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")))) {
-        puts("Usage: func <input FunC file> <output .c file> [output .h file]");
+        puts("Usage: func <output .c file> <input FunC file(s)...>");
         return 0;
     }
 
-    if (argc != 3) {
-        fprintf(stderr, "Invalid number of command-line arguments (expected 3, got %d)\n", argc - 1);
-        return -1;
-    }
-
-    if (!(yyin = fopen(argv[1], "r"))) {
-        fprintf(stderr, "Unable to open input file: \"%s\"\n", argv[1]);
+    if (argc < 3) {
+        fprintf(stderr, "Invalid number of command-line arguments (expected at least 2, got %d)\n", argc - 1);
         return -1;
     }
 
@@ -253,12 +248,19 @@ int main(const int argc, const char* const* const argv) {
     FUNC_FORWARD_LIST = StrList_ctor();
     FUNC_LIST = StrList_ctor();
 
-    yyparse();
-    fclose(yyin);
+    for (int i = 2; i < argc; i++) {
+        if (!(yyin = fopen(argv[i], "r"))) {
+            fprintf(stderr, "Unable to open input file: \"%s\"\n", argv[i]);
+            return -1;
+        }
 
-    FILE* const fc = fopen(argv[2], "w");
+        yyparse();
+        fclose(yyin);
+    }
+
+    FILE* const fc = fopen(argv[1], "w");
     if (!fc) {
-        fprintf(stderr, "Unable to open output .c file: \"%s\"\n", argv[2]);
+        fprintf(stderr, "Unable to open output .c file: \"%s\"\n", argv[1]);
         return -1;
     }
 
