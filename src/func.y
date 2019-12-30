@@ -46,6 +46,14 @@
             return ls->str;
         }
     }
+
+    const char* joinLinkedStrFuncParam(const struct LinkedStr_t* const ls) {
+        return ls ? ls->next ? strformat("%s, %s", ls->str, joinLinkedStrFuncParam(ls->next)) : ls->str : "";
+    }
+
+    const char* joinLinkedStrStructAttr(const struct LinkedStr_t* const ls) {
+        return ls ? strformat("    %s;\n%s", ls->str, joinLinkedStrStructAttr(ls->next)) : "";
+    }
 %}
 
 %define parse.error verbose
@@ -60,10 +68,10 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> else_if func_body func_params param_list param_list_next struct_attributes struct_attr_values var_def type pointers binary_operation
+%type<strval> else_if func_body func_params struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ternary basic_value
 
-%type<linkedstr> operands operands_next
+%type<linkedstr> var_def_list operands operands_next
 
 %%
 
@@ -84,7 +92,7 @@ top_level_statement_block:
                          ;
 
 top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
-                   | '(' KW_STRUCT T_ID struct_attributes ')'                   { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, $4)); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
+                   | '(' KW_STRUCT T_ID var_def_list ')'                        { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -111,20 +119,13 @@ func_body: statement_block              { $$ = $1; }
          | '$' ternary                  { $$ = strformat("    return %s;\n", $2); }
          ;
 
-func_params:                            { $$ = "void"; }
-           | param_list                 { $$ = $1; }
+func_params: var_def_list               { $$ = $1 ? joinLinkedStrFuncParam($1) : "void"; }
+           | var_def                    { $$ = $1; }
            ;
 
-param_list: var_def param_list_next     { $$ = strformat("%s%s", $1, $2); }
-          ;
-
-param_list_next:                        { $$ = ""; }
-               | ',' param_list         { $$ = strformat(", %s", $2); }
-               ;
-
-struct_attributes:                                      { $$ = ""; }
-                 | '(' var_def ')' struct_attributes    { $$ = strformat("    %s;\n%s", $2, $4); }
-                 ;
+var_def_list:                               { $$ = NULL; }
+            | '(' var_def ')' var_def_list  { $$ = newLinkedStr($2, $4); }
+            ;
 
 struct_attr_values:                                             { $$ = ""; }
                   | '(' T_ID any_expr ')' struct_attr_values    { $$ = strformat(".%s = %s, %s", $2, $3, $5); }
