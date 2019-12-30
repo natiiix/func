@@ -2,15 +2,18 @@
 
 all: func
 
-func: $(wildcard src/*)
-	flex src/func.l
-	bison -d src/func.y --verbose
-	gcc -Wall -Wextra -Wno-unused-function -o func func.tab.c lex.yy.c $(wildcard src/*.c)
+func: Makefile $(wildcard src/*)
+	rm -rfv tmp/*
+	mkdir -p tmp/
+	flex --nodefault -o tmp/lex.yy.c src/func.l
+	bison -d -o tmp/func.tab.c --verbose src/func.y
+	cp src/*.c tmp/
+	cp src/*.h tmp/
+	gcc -Wall -Wextra -o func tmp/*.c
 
 clean:
-	rm func.tab.c lex.yy.c func.tab.h func func.output example.c example
+	rm -rfv tmp/ func example example.c
 
 test: func example.func
-	./func example.func example.c
-	gcc example.c -o example
-
+	./func example.c example.func
+	gcc -Wall -Wextra example.c -o example
