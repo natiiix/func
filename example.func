@@ -34,6 +34,10 @@
     (var s String_t (str_ctor "Hello World!"))
     (printf "\"%s\" -- length: %lu\n" s.ptr s.length)
 
+    (for (var i int 0) (< i 10) (++ i)
+        (printf "%d\n" i)
+    )
+
     (return 0)
 )
 

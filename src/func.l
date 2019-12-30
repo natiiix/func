@@ -29,6 +29,7 @@
 "do"                            TOKEN(KW_DO)
 "if"                            TOKEN(KW_IF)
 "while"                         TOKEN(KW_WHILE)
+"for"                           TOKEN(KW_FOR)
 "sizeof"                        TOKEN(KW_SIZEOF)
 "type"                          TOKEN(KW_TYPE)
 "return"                        TOKEN(KW_RETURN)
