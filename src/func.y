@@ -64,11 +64,11 @@
 }
 
 %token<strval> T_ID T_NUM T_STR T_CHAR
-%token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN
+%token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN OP_RANGE
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> elem_or_var_def var_def_stat else_if func_body func_params struct_attr_values var_def type pointers binary_operation
+%type<strval> elem_or_var_def var_def_stat for_head else_if func_body func_params struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
@@ -99,15 +99,15 @@ statement_block:                                { $$ = ""; }
                | statement statement_block      { $$ = strformat("%s%s", $1, $2); }
                ;
 
-statement: elem_or_var_def                                                      { $$ = strformat("    %s;\n", $1); }
-         | '(' KW_DO statement_block ')'                                        { $$ = strformat("{\n%s}\n", $3); }
-         | '(' KW_IF elem_expr statement else_if ')'                            { $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
-         | '(' KW_WHILE elem_expr statement_block ')'                           { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
-         | '(' KW_FOR elem_or_var_def elem_expr elem_expr statement_block ')'   { $$ = strformat("for (%s; %s; %s) {\n%s}\n", $3, $4, $5, $6); }
-         | '(' KW_RETURN ')'                                                    { $$ = "    return;\n"; }
-         | '(' KW_RETURN any_expr ')'                                           { $$ = strformat("    return %s;\n", $3); }
-         | '(' KW_BREAK ')'                                                     { $$ = "    break;\n"; }
-         | '(' KW_CONTINUE ')'                                                  { $$ = "    continue;\n"; }
+statement: elem_or_var_def                              { $$ = strformat("    %s;\n", $1); }
+         | '(' KW_DO statement_block ')'                { $$ = strformat("{\n%s}\n", $3); }
+         | '(' KW_IF elem_expr statement else_if ')'    { $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
+         | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_FOR for_head statement_block ')'      { $$ = strformat("for (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_RETURN ')'                            { $$ = "    return;\n"; }
+         | '(' KW_RETURN any_expr ')'                   { $$ = strformat("    return %s;\n", $3); }
+         | '(' KW_BREAK ')'                             { $$ = "    break;\n"; }
+         | '(' KW_CONTINUE ')'                          { $$ = "    continue;\n"; }
          ;
 
 elem_or_var_def: elem_expr              { $$ = $1; }
@@ -116,6 +116,11 @@ elem_or_var_def: elem_expr              { $$ = $1; }
 
 var_def_stat: '(' KW_VAR var_def var_assign ')'     { $$ = strformat("%s%s", $3, $4); }
             ;
+
+for_head: elem_or_var_def elem_expr elem_expr           { $$ = strformat("%s; %s; %s", $1, $2, $3); }
+        | T_ID OP_RANGE elem_expr                       { $$ = strformat("int %s = 0; %s < %s; %s++", $1, $1, $3, $1); }
+        | T_ID OP_RANGE elem_expr OP_RANGE elem_expr    { $$ = strformat("int %s = %s; %s < %s; %s++", $1, $3, $1, $5, $1); }
+        ;
 
 else_if:                                { $$ = ""; }
        | statement                      { $$ = strformat("else {\n%s}\n", $1); }
