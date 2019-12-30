@@ -1,6 +1,6 @@
 [stdio string]
 
-(func main (argc int, argv char**) int
+(func main ((argc int) (argv char**)) int
     (puts [argv])
     (printf "[...%s]\n" [* [argv] 3])
 
