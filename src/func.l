@@ -36,10 +36,10 @@
 "break"                         TOKEN(KW_BREAK)
 "continue"                      TOKEN(KW_CONTINUE)
 
-[_a-zA-Z][_a-zA-Z0-9]*          STR_TOKEN(T_ID)
-[0-9]+(\.[0-9]+)?               STR_TOKEN(T_NUM)
-\"([^\\\"]|\\.)*\"              STR_TOKEN(T_STR)
-'([^\\']|\\.)'                  STR_TOKEN(T_CHAR)
+[_a-zA-Z][_a-zA-Z0-9]*                      STR_TOKEN(T_ID)
+[0-9]+(\.[0-9]+)?|0x[0-9a-fA-F]+|0b[01]+    STR_TOKEN(T_NUM)
+\"([^\\\"]|\\.)*\"                          STR_TOKEN(T_STR)
+'([^\\']|\\.)'                              STR_TOKEN(T_CHAR)
 
 ".."                            TOKEN(OP_RANGE)
 
