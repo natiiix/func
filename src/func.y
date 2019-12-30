@@ -5,6 +5,7 @@
     #include <stdlib.h>
     #include <string.h>
     #include <stdarg.h>
+    #include <stdbool.h>
 
     #include "strlist.h"
 
@@ -19,6 +20,7 @@
     char* strformat(const char* const format, ...);
 
     StrList_t INCLUDE_LIST;
+    StrList_t C_SNIPPET_LIST;
     StrList_t STRUCT_FORWARD_LIST;
     StrList_t STRUCT_LIST;
     StrList_t GLOBAL_VAR_LIST;
@@ -56,6 +58,32 @@
 
     const char* joinLinkedStrStructAttr(const struct LinkedStr_t* const ls) {
         return ls ? strformat("    %s;\n%s", ls->str, joinLinkedStrStructAttr(ls->next)) : "";
+    }
+
+    char* cstrip(const char* const str) {
+        size_t len = strlen(str);
+        char* out = malloc(len - 1);
+
+        size_t index = 0;
+        bool escaped = false;
+
+        for (size_t i = 1; i < len - 1; i++) {
+            if (escaped) {
+                if (str[i] != '"') {
+                    out[index++] = '\\';
+                }
+
+                escaped = false;
+            } else if (str[i] == '\\') {
+                escaped = true;
+                continue;
+            }
+
+            out[index++] = str[i];
+        }
+
+        out[index] = '\0';
+        return out;
     }
 %}
 
@@ -98,6 +126,7 @@ top_level_statement_block:
 top_level_statement: '(' KW_FUNC func_head func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s {\n%s}", $3, $4)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s;", $3)); }
                    | '(' KW_STRUCT T_ID var_def_list ')'    { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
                    | var_def_stat                           { StrList_append(&GLOBAL_VAR_LIST, strformat("%s;", $1)); }
+                   | T_STR                                  { StrList_append(&C_SNIPPET_LIST, strformat("%s", cstrip($1))); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -282,6 +311,8 @@ int main(const int argc, const char* const* const argv) {
 
     StrList_fjoin(&INCLUDE_LIST, fc, "\n");
     fputs("\n\n", fc);
+    StrList_fjoin(&C_SNIPPET_LIST, fc, "\n\n");
+    fputs("\n\n", fc);
     StrList_fjoin(&STRUCT_FORWARD_LIST, fc, "\n");
     fputs("\n\n", fc);
     StrList_fjoin(&STRUCT_LIST, fc, "\n\n");
@@ -296,6 +327,7 @@ int main(const int argc, const char* const* const argv) {
     fclose(fc);
 
     StrList_dtor(&INCLUDE_LIST);
+    StrList_dtor(&C_SNIPPET_LIST);
     StrList_dtor(&STRUCT_FORWARD_LIST);
     StrList_dtor(&STRUCT_LIST);
     StrList_dtor(&GLOBAL_VAR_LIST);
