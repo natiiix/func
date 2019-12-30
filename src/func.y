@@ -21,6 +21,7 @@
     StrList_t INCLUDE_LIST;
     StrList_t STRUCT_FORWARD_LIST;
     StrList_t STRUCT_LIST;
+    StrList_t GLOBAL_VAR_LIST;
     StrList_t FUNC_FORWARD_LIST;
     StrList_t FUNC_LIST;
 
@@ -71,7 +72,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> elem_or_var_def var_def_stat for_head else_if func_body func_params struct_attr_values var_def type pointers binary_operation
+%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type pointers binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ptr_member ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
@@ -87,15 +88,16 @@ include_block:
 
 include_list:
             | T_ID include_list         { StrList_append(&INCLUDE_LIST, strformat("#include <%s.h>", $1)); }
-            | T_STR include_list        { StrList_append(&INCLUDE_LIST, strformat("#include \"%s\"", $1)); }
+            | T_STR include_list        { StrList_append(&INCLUDE_LIST, strformat("#include %s", $1)); }
             ;
 
 top_level_statement_block:
                          | top_level_statement top_level_statement_block
                          ;
 
-top_level_statement: '(' KW_FUNC T_ID '(' func_params ')' type func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s %s(%s) {\n%s}", $7, $3, $5, $8)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s %s(%s);", $7, $3, $5)); }
-                   | '(' KW_STRUCT T_ID var_def_list ')'                        { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
+top_level_statement: '(' KW_FUNC func_head func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s {\n%s}", $3, $4)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s;", $3)); }
+                   | '(' KW_STRUCT T_ID var_def_list ')'    { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
+                   | var_def_stat                           { StrList_append(&GLOBAL_VAR_LIST, strformat("%s;", $1)); }
                    ;
 
 statement_block:                                { $$ = ""; }
@@ -129,6 +131,10 @@ else_if:                                { $$ = ""; }
        | statement                      { $$ = strformat("else {\n%s}\n", $1); }
        | elem_expr statement else_if    { $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
        ;
+
+func_head: T_ID '(' func_params ')' type    { $$ = strformat("%s %s(%s)", $5, $1, $3); }
+         | T_ID type                        { $$ = strformat("%s %s()", $2, $1); }
+         ;
 
 func_body: statement_block              { $$ = $1; }
          | '$' ternary                  { $$ = strformat("    return %s;\n", $2); }
@@ -252,7 +258,9 @@ int main(const int argc, const char* const* const argv) {
     }
 
     INCLUDE_LIST = StrList_ctor();
+    STRUCT_FORWARD_LIST = StrList_ctor();
     STRUCT_LIST = StrList_ctor();
+    GLOBAL_VAR_LIST = StrList_ctor();
     FUNC_FORWARD_LIST = StrList_ctor();
     FUNC_LIST = StrList_ctor();
 
@@ -278,6 +286,8 @@ int main(const int argc, const char* const* const argv) {
     fputs("\n\n", fc);
     StrList_fjoin(&STRUCT_LIST, fc, "\n\n");
     fputs("\n\n", fc);
+    StrList_fjoin(&GLOBAL_VAR_LIST, fc, "\n");
+    fputs("\n\n", fc);
     StrList_fjoin(&FUNC_FORWARD_LIST, fc, "\n");
     fputs("\n\n", fc);
     StrList_fjoin(&FUNC_LIST, fc, "\n\n");
@@ -286,7 +296,9 @@ int main(const int argc, const char* const* const argv) {
     fclose(fc);
 
     StrList_dtor(&INCLUDE_LIST);
+    StrList_dtor(&STRUCT_FORWARD_LIST);
     StrList_dtor(&STRUCT_LIST);
+    StrList_dtor(&GLOBAL_VAR_LIST);
     StrList_dtor(&FUNC_FORWARD_LIST);
     StrList_dtor(&FUNC_LIST);
 }
