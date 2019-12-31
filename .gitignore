@@ -1,5 +1,11 @@
-/tmp/
-/func
-/func.output
 /example.c
 /example
+
+/tmp/func.output
+/tmp/func.tab.c
+/tmp/func.tab.h
+/tmp/lex.yy.c
+/tmp/strlist.c
+/tmp/strlist.h
+
+/bin/
