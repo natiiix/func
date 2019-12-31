@@ -100,7 +100,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type pointers binary_operation
+%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type pointers minus_operation binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ptr_member ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
@@ -225,10 +225,11 @@ round_expr: T_ID call_args              { $$ = strformat("%s(%s)", $1, $2); }
           | '$' ternary                 { $$ = $2; }
           ;
 
-arith_expr: OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
+arith_expr: binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
+          | OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
           | OP_ASSIGN elem_expr any_expr    { $$ = strformat("%s %s %s", $2, $1, $3); }
-          | binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
           | OP_COMPARE operands             { $$ = joinLinkedStrCompOp($2, $1); }
+          | minus_operation                 { $$ = $1; }
           ;
 
 ptr_member:                             { $$ = ""; }
@@ -251,6 +252,10 @@ basic_value: T_ID                       { $$ = $1; }
            | T_STR                      { $$ = $1; }
            | T_CHAR                     { $$ = $1; }
            ;
+
+minus_operation: '-' any_expr           { $$ = strformat("-%s", $2); }
+               | '-' operands           { $$ = joinLinkedStrBinOp($2, "-"); }
+               ;
 
 binary_operation: OP_BINARY             { $$ = $1; }
                 | '*'                   { $$ = "*"; }
