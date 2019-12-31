@@ -33,7 +33,7 @@ if ((((argc == 1)) || (((argc == 2)) && ((!(strcmp((argv[1]), "-h"))) || (!(strc
 if (((argc < 3))) {
 {
     fprintf(stderr, "Invalid number of command-line arguments (expected at least 2, got %d)\n", (argc - 1));
-    return 0xFF;
+    return (-1);
 }
 }
     (INCLUDE_LIST = StrList_ctor());
@@ -46,7 +46,7 @@ for (int i = 2; i < argc; i++) {
 if ((!((yyin = fopen((infile = (argv[i])), "r"))))) {
 {
     fprintf(stderr, "Unable to open input file: \"%s\"\n", infile);
-    return 0xFF;
+    return (-1);
 }
 }
     yyparse();
@@ -56,7 +56,7 @@ if ((!((yyin = fopen((infile = (argv[i])), "r"))))) {
 if ((!(fc))) {
 {
     fprintf(stderr, "Unable to open output .c file: \"%s\"\n", (argv[1]));
-    return 0xFF;
+    return (-1);
 }
 }
     StrList_fjoin((&INCLUDE_LIST), fc, "\n");
