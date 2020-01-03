@@ -210,6 +210,7 @@ elem_expr: '(' round_expr ')'               { $$ = $2; }
          | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
          | '[' '*' elem_expr any_expr ']'   { $$ = strformat("(&(%s[%s]))", $3, $4); }
          | '{' struct_attr_values '}'       { $$ = strformat("{%s}", $2); }
+         | '{' T_ID struct_attr_values '}'  { $$ = strformat("((%s){%s})", $2, $3); }
          | elem_expr '.' T_ID               { $$ = strformat("(%s.%s)", $1, $3); }
          | elem_expr '.' '[' ptr_member ']' { $$ = strformat("(%s%s)", $1, $4); }
          | basic_value                      { $$ = $1; }
