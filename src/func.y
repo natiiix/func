@@ -135,7 +135,7 @@ top_level_statement: '(' KW_FUNC func_head func_body ')'    { LOC_JOIN(@$, @1, @
                    ;
 
 statement_block:                                { LOC_ZERO(@$); $$ = ""; }
-               | statement statement_block      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
+               | statement statement_block      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s%s", LOC_LINE(@1), $1, $2); }
                ;
 
 statement: elem_or_var_def                              { LOC_COPY(@$, @1); $$ = strformat("    %s;\n", $1); }
