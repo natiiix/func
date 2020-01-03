@@ -85,6 +85,11 @@
         out[index] = '\0';
         return out;
     }
+
+    #define LOC_JOIN(_OUT, _FIRST, _LAST) _OUT.first_line = _FIRST.first_line; _OUT.first_column = _FIRST.first_column; _OUT.last_line = _LAST.last_line; _OUT.last_column = _LAST.last_column;
+    #define LOC_COPY(_OUT, _FIRST) _OUT = _FIRST;
+    #define LOC_ZERO(_OUT) _OUT.first_line = _OUT.first_column = _OUT.last_line = _OUT.last_column = 0;
+    #define LOC_LINE(_IN) strformat("#line %d \"%s\"\n", _IN.first_line, infile)
 %}
 
 %locations
@@ -107,159 +112,159 @@
 
 %%
 
-module: include_block top_level_statement_block
+module: include_block top_level_statement_block     { LOC_JOIN(@$, @1, @2); }
       ;
 
-include_block:
-             | '[' include_list ']' include_block
+include_block:                                      { LOC_ZERO(@$); }
+             | '[' include_list ']' include_block   { LOC_JOIN(@$, @1, @4); }
              ;
 
-include_list:
-            | T_ID include_list         { StrList_append(&INCLUDE_LIST, strformat("#include <%s.h>", $1)); }
-            | T_STR include_list        { StrList_append(&INCLUDE_LIST, strformat("#include %s", $1)); }
+include_list:                           { LOC_ZERO(@$); }
+            | T_ID include_list         { LOC_JOIN(@$, @1, @2); StrList_append(&INCLUDE_LIST, strformat("%s#include <%s.h>", LOC_LINE(@$), $1)); }
+            | T_STR include_list        { LOC_JOIN(@$, @1, @2); StrList_append(&INCLUDE_LIST, strformat("%s#include %s", LOC_LINE(@$), $1)); }
             ;
 
-top_level_statement_block:
-                         | top_level_statement top_level_statement_block
+top_level_statement_block:                                                  { LOC_ZERO(@$); }
+                         | top_level_statement top_level_statement_block    { LOC_JOIN(@$, @1, @2); }
                          ;
 
-top_level_statement: '(' KW_FUNC func_head func_body ')'    { StrList_append(&FUNC_LIST, strformat("%s {\n%s}", $3, $4)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s;", $3)); }
-                   | '(' KW_STRUCT T_ID var_def_list ')'    { StrList_append(&STRUCT_LIST, strformat("struct %s {\n%s};", $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("typedef struct %s %s;", $3, $3)); }
-                   | var_def_stat                           { StrList_append(&GLOBAL_VAR_LIST, strformat("%s;", $1)); }
-                   | T_STR                                  { StrList_append(&C_SNIPPET_LIST, strformat("%s", cstrip($1))); }
+top_level_statement: '(' KW_FUNC func_head func_body ')'    { LOC_JOIN(@$, @1, @5); StrList_append(&FUNC_LIST, strformat("%s%s {\n%s}", LOC_LINE(@$), $3, $4)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s%s;", LOC_LINE(@$), $3)); }
+                   | '(' KW_STRUCT T_ID var_def_list ')'    { LOC_JOIN(@$, @1, @5); StrList_append(&STRUCT_LIST, strformat("%sstruct %s {\n%s};", LOC_LINE(@$), $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("%stypedef struct %s %s;", LOC_LINE(@$), $3, $3)); }
+                   | var_def_stat                           { LOC_COPY(@$, @1); StrList_append(&GLOBAL_VAR_LIST, strformat("%s%s;", LOC_LINE(@$), $1)); }
+                   | T_STR                                  { LOC_COPY(@$, @1); StrList_append(&C_SNIPPET_LIST, strformat("%s%s", LOC_LINE(@$), cstrip($1))); }
                    ;
 
-statement_block:                                { $$ = ""; }
-               | statement statement_block      { $$ = strformat("%s%s", $1, $2); }
+statement_block:                                { LOC_ZERO(@$); $$ = ""; }
+               | statement statement_block      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
                ;
 
-statement: elem_or_var_def                              { $$ = strformat("    %s;\n", $1); }
-         | '(' KW_DO statement_block ')'                { $$ = strformat("{\n%s}\n", $3); }
-         | '(' KW_IF elem_expr statement else_if ')'    { $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
-         | '(' KW_WHILE elem_expr statement_block ')'   { $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
-         | '(' KW_FOR for_head statement_block ')'      { $$ = strformat("for (%s) {\n%s}\n", $3, $4); }
-         | '(' KW_RETURN ')'                            { $$ = "    return;\n"; }
-         | '(' KW_RETURN any_expr ')'                   { $$ = strformat("    return %s;\n", $3); }
-         | '(' KW_BREAK ')'                             { $$ = "    break;\n"; }
-         | '(' KW_CONTINUE ')'                          { $$ = "    continue;\n"; }
+statement: elem_or_var_def                              { LOC_COPY(@$, @1); $$ = strformat("    %s;\n", $1); }
+         | '(' KW_DO statement_block ')'                { LOC_JOIN(@$, @1, @4); $$ = strformat("{\n%s}\n", $3); }
+         | '(' KW_IF elem_expr statement else_if ')'    { LOC_JOIN(@$, @1, @6); $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
+         | '(' KW_WHILE elem_expr statement_block ')'   { LOC_JOIN(@$, @1, @5); $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_FOR for_head statement_block ')'      { LOC_JOIN(@$, @1, @5); $$ = strformat("for (%s) {\n%s}\n", $3, $4); }
+         | '(' KW_RETURN ')'                            { LOC_JOIN(@$, @1, @3); $$ = "    return;\n"; }
+         | '(' KW_RETURN any_expr ')'                   { LOC_JOIN(@$, @1, @4); $$ = strformat("    return %s;\n", $3); }
+         | '(' KW_BREAK ')'                             { LOC_JOIN(@$, @1, @3); $$ = "    break;\n"; }
+         | '(' KW_CONTINUE ')'                          { LOC_JOIN(@$, @1, @3); $$ = "    continue;\n"; }
          ;
 
-elem_or_var_def: elem_expr              { $$ = $1; }
-               | var_def_stat           { $$ = $1; }
+elem_or_var_def: elem_expr              { LOC_COPY(@$, @1); $$ = $1; }
+               | var_def_stat           { LOC_COPY(@$, @1); $$ = $1; }
                ;
 
-var_def_stat: '(' KW_VAR var_def var_assign ')'     { $$ = strformat("%s%s", $3, $4); }
+var_def_stat: '(' KW_VAR var_def var_assign ')'     { LOC_JOIN(@$, @1, @5); $$ = strformat("%s%s", $3, $4); }
             ;
 
-for_head: elem_or_var_def elem_expr elem_expr           { $$ = strformat("%s; %s; %s", $1, $2, $3); }
-        | T_ID OP_RANGE elem_expr                       { $$ = strformat("int %s = 0; %s < %s; %s++", $1, $1, $3, $1); }
-        | T_ID OP_RANGE elem_expr OP_RANGE elem_expr    { $$ = strformat("int %s = %s; %s < %s; %s++", $1, $3, $1, $5, $1); }
+for_head: elem_or_var_def elem_expr elem_expr           { LOC_JOIN(@$, @1, @3); $$ = strformat("%s; %s; %s", $1, $2, $3); }
+        | T_ID OP_RANGE elem_expr                       { LOC_JOIN(@$, @1, @2); $$ = strformat("int %s = 0; %s < %s; %s++", $1, $1, $3, $1); }
+        | T_ID OP_RANGE elem_expr OP_RANGE elem_expr    { LOC_JOIN(@$, @1, @4); $$ = strformat("int %s = %s; %s < %s; %s++", $1, $3, $1, $5, $1); }
         ;
 
-else_if:                                { $$ = ""; }
-       | statement                      { $$ = strformat("else {\n%s}\n", $1); }
-       | elem_expr statement else_if    { $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
+else_if:                                { LOC_ZERO(@$); $$ = ""; }
+       | statement                      { LOC_COPY(@$, @1); $$ = strformat("else {\n%s}\n", $1); }
+       | elem_expr statement else_if    { LOC_JOIN(@$, @1, @3); $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
        ;
 
-func_head: T_ID '(' func_params ')' type    { $$ = strformat("%s %s(%s)", $5, $1, $3); }
-         | T_ID type                        { $$ = strformat("%s %s()", $2, $1); }
+func_head: T_ID '(' func_params ')' type    { LOC_JOIN(@$, @1, @5); $$ = strformat("%s %s(%s)", $5, $1, $3); }
+         | T_ID type                        { LOC_JOIN(@$, @1, @2); $$ = strformat("%s %s()", $2, $1); }
          ;
 
-func_body: statement_block              { $$ = $1; }
-         | '$' ternary                  { $$ = strformat("    return %s;\n", $2); }
+func_body: statement_block              { LOC_COPY(@$, @1); $$ = $1; }
+         | '$' ternary                  { LOC_JOIN(@$, @1, @2); $$ = strformat("    return %s;\n", $2); }
          ;
 
-func_params: var_def_list               { $$ = $1 ? joinLinkedStrFuncParam($1) : "void"; }
-           | var_def                    { $$ = $1; }
+func_params: var_def_list               { LOC_COPY(@$, @1); $$ = $1 ? joinLinkedStrFuncParam($1) : "void"; }
+           | var_def                    { LOC_COPY(@$, @1); $$ = $1; }
            ;
 
-struct_attr_values:                                             { $$ = ""; }
-                  | '(' T_ID any_expr ')' struct_attr_values    { $$ = strformat(".%s = %s, %s", $2, $3, $5); }
+struct_attr_values:                                             { LOC_ZERO(@$); $$ = ""; }
+                  | '(' T_ID any_expr ')' struct_attr_values    { LOC_JOIN(@$, @1, @4); $$ = strformat(".%s = %s, %s", $2, $3, $5); }
                   ;
 
-var_def_list:                               { $$ = NULL; }
-            | '(' var_def ')' var_def_list  { $$ = newLinkedStr($2, $4); }
+var_def_list:                               { LOC_ZERO(@$); $$ = NULL; }
+            | '(' var_def ')' var_def_list  { LOC_JOIN(@$, @1, @4); $$ = newLinkedStr($2, $4); }
             ;
 
-var_def: T_ID type                      { $$ = strformat("%s %s", $2, $1); }
+var_def: T_ID type                      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s %s", $2, $1); }
        ;
 
-type: T_ID pointers                     { $$ = strformat("%s%s", $1, $2); }
+type: T_ID pointers                     { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
     ;
 
-pointers:                               { $$ = ""; }
-        | '*' pointers                  { $$ = strformat("*%s", $2); }
+pointers:                               { LOC_ZERO(@$); $$ = ""; }
+        | '*' pointers                  { LOC_JOIN(@$, @1, @2); $$ = strformat("*%s", $2); }
         ;
 
-var_assign:                             { $$ = ""; }
-          | any_expr                    { $$ = strformat(" = %s", $1); }
+var_assign:                             { LOC_ZERO(@$); $$ = ""; }
+          | any_expr                    { LOC_COPY(@$, @1); $$ = strformat(" = %s", $1); }
           ;
 
-call_args:                              { $$ = ""; }
-         | dollar_expr                  { $$ = $1; }
-         | elem_expr call_args          { $$ = $2[0] ? strformat("%s, %s", $1, $2) : $1; }
+call_args:                              { LOC_ZERO(@$); $$ = ""; }
+         | dollar_expr                  { LOC_COPY(@$, @1); $$ = $1; }
+         | elem_expr call_args          { LOC_JOIN(@$, @1, @2); $$ = $2[0] ? strformat("%s, %s", $1, $2) : $1; }
          ;
 
-any_expr: elem_expr                     { $$ = $1; }
-        | dollar_expr                   { $$ = $1; }
+any_expr: elem_expr                     { LOC_COPY(@$, @1); $$ = $1; }
+        | dollar_expr                   { LOC_COPY(@$, @1); $$ = $1; }
         ;
 
-elem_expr: '(' round_expr ')'               { $$ = $2; }
-         | '[' any_expr ']'                 { $$ = strformat("(*%s)", $2); }
-         | '[' elem_expr any_expr ']'       { $$ = strformat("(%s[%s])", $2, $3); }
-         | '[' '*' any_expr ']'             { $$ = strformat("(&%s)", $3); }
-         | '[' '*' elem_expr any_expr ']'   { $$ = strformat("(&(%s[%s]))", $3, $4); }
-         | '{' struct_attr_values '}'       { $$ = strformat("{%s}", $2); }
-         | '{' T_ID struct_attr_values '}'  { $$ = strformat("((%s){%s})", $2, $3); }
-         | elem_expr '.' T_ID               { $$ = strformat("(%s.%s)", $1, $3); }
-         | elem_expr '.' '[' ptr_member ']' { $$ = strformat("(%s%s)", $1, $4); }
-         | basic_value                      { $$ = $1; }
+elem_expr: '(' round_expr ')'               { LOC_JOIN(@$, @1, @3); $$ = $2; }
+         | '[' any_expr ']'                 { LOC_JOIN(@$, @1, @3); $$ = strformat("(*%s)", $2); }
+         | '[' elem_expr any_expr ']'       { LOC_JOIN(@$, @1, @4); $$ = strformat("(%s[%s])", $2, $3); }
+         | '[' '*' any_expr ']'             { LOC_JOIN(@$, @1, @4); $$ = strformat("(&%s)", $3); }
+         | '[' '*' elem_expr any_expr ']'   { LOC_JOIN(@$, @1, @5); $$ = strformat("(&(%s[%s]))", $3, $4); }
+         | '{' struct_attr_values '}'       { LOC_JOIN(@$, @1, @3); $$ = strformat("{%s}", $2); }
+         | '{' T_ID struct_attr_values '}'  { LOC_JOIN(@$, @1, @4); $$ = strformat("((%s){%s})", $2, $3); }
+         | elem_expr '.' T_ID               { LOC_JOIN(@$, @1, @3); $$ = strformat("(%s.%s)", $1, $3); }
+         | elem_expr '.' '[' ptr_member ']' { LOC_JOIN(@$, @1, @3); $$ = strformat("(%s%s)", $1, $4); }
+         | basic_value                      { LOC_COPY(@$, @1); $$ = $1; }
          ;
 
-dollar_expr: '$' round_expr             { $$ = $2; }
+dollar_expr: '$' round_expr             { LOC_JOIN(@$, @1, @2); $$ = $2; }
            ;
 
-round_expr: T_ID call_args              { $$ = strformat("%s(%s)", $1, $2); }
-          | arith_expr                  { $$ = strformat("(%s)", $1); }
-          | KW_SIZEOF type              { $$ = strformat("sizeof(%s)", $2); }
-          | KW_TYPE type any_expr       { $$ = strformat("((%s)%s)", $2, $3); }
-          | '$' ternary                 { $$ = $2; }
+round_expr: T_ID call_args              { LOC_JOIN(@$, @1, @2); $$ = strformat("%s(%s)", $1, $2); }
+          | arith_expr                  { LOC_COPY(@$, @1); $$ = strformat("(%s)", $1); }
+          | KW_SIZEOF type              { LOC_JOIN(@$, @1, @2); $$ = strformat("sizeof(%s)", $2); }
+          | KW_TYPE type any_expr       { LOC_JOIN(@$, @1, @3); $$ = strformat("((%s)%s)", $2, $3); }
+          | '$' ternary                 { LOC_JOIN(@$, @1, @2); $$ = $2; }
           ;
 
-arith_expr: binary_operation operands       { $$ = joinLinkedStrBinOp($2, $1); }
-          | OP_UNARY any_expr               { $$ = strformat("%s(%s)", $1, $2); }
-          | OP_ASSIGN elem_expr any_expr    { $$ = strformat("%s %s %s", $2, $1, $3); }
-          | OP_COMPARE operands             { $$ = joinLinkedStrCompOp($2, $1); }
-          | minus_operation                 { $$ = $1; }
+arith_expr: binary_operation operands       { LOC_JOIN(@$, @1, @2); $$ = joinLinkedStrBinOp($2, $1); }
+          | OP_UNARY any_expr               { LOC_JOIN(@$, @1, @2); $$ = strformat("%s(%s)", $1, $2); }
+          | OP_ASSIGN elem_expr any_expr    { LOC_JOIN(@$, @1, @3); $$ = strformat("%s %s %s", $2, $1, $3); }
+          | OP_COMPARE operands             { LOC_JOIN(@$, @1, @2); $$ = joinLinkedStrCompOp($2, $1); }
+          | minus_operation                 { LOC_COPY(@$, @1); $$ = $1; }
           ;
 
-ptr_member:                             { $$ = ""; }
-          | T_ID ptr_member             { $$ = strformat("->%s%s", $1, $2); }
+ptr_member:                             { LOC_ZERO(@$); $$ = ""; }
+          | T_ID ptr_member             { LOC_JOIN(@$, @1, @2); $$ = strformat("->%s%s", $1, $2); }
           ;
 
-ternary: any_expr                       { $$ = $1; }
-       | elem_expr elem_expr ternary    { $$ = strformat("(%s ? %s : %s)", $1, $2, $3); }
+ternary: any_expr                       { LOC_COPY(@$, @1); $$ = $1; }
+       | elem_expr elem_expr ternary    { LOC_JOIN(@$, @1, @3); $$ = strformat("(%s ? %s : %s)", $1, $2, $3); }
        ;
 
-operands: elem_expr operands_next       { $$ = newLinkedStr($1, $2); }
+operands: elem_expr operands_next       { LOC_JOIN(@$, @1, @2); $$ = newLinkedStr($1, $2); }
         ;
 
-operands_next: any_expr                 { $$ = newLinkedStr($1, NULL); }
-             | operands                 { $$ = $1; }
+operands_next: any_expr                 { LOC_COPY(@$, @1); $$ = newLinkedStr($1, NULL); }
+             | operands                 { LOC_COPY(@$, @1); $$ = $1; }
              ;
 
-basic_value: T_ID                       { $$ = $1; }
-           | T_NUM                      { $$ = $1; }
-           | T_STR                      { $$ = $1; }
-           | T_CHAR                     { $$ = $1; }
+basic_value: T_ID                       { LOC_COPY(@$, @1); $$ = $1; }
+           | T_NUM                      { LOC_COPY(@$, @1); $$ = $1; }
+           | T_STR                      { LOC_COPY(@$, @1); $$ = $1; }
+           | T_CHAR                     { LOC_COPY(@$, @1); $$ = $1; }
            ;
 
-minus_operation: '-' any_expr           { $$ = strformat("-%s", $2); }
-               | '-' operands           { $$ = joinLinkedStrBinOp($2, "-"); }
+minus_operation: '-' any_expr           { LOC_JOIN(@$, @1, @2); $$ = strformat("-%s", $2); }
+               | '-' operands           { LOC_JOIN(@$, @1, @2); $$ = joinLinkedStrBinOp($2, "-"); }
                ;
 
-binary_operation: OP_BINARY             { $$ = $1; }
-                | '*'                   { $$ = "*"; }
+binary_operation: OP_BINARY             { LOC_COPY(@$, @1); $$ = $1; }
+                | '*'                   { LOC_COPY(@$, @1); $$ = "*"; }
                 ;
 
 %%

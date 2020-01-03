@@ -1,28 +1,40 @@
+#line 1 "src/main.func"
 #include <string.h>
+#line 1 "src/main.func"
 #include <stdio.h>
+#line 2 "src/main.func"
 #include "strlist.h"
 
+#line 4 "src/main.func"
 extern int yylex();
 
+#line 5 "src/main.func"
 extern int yyparse();
 
+#line 6 "src/main.func"
 extern FILE* yyin;
 
-
-
-
-
+#line 8 "src/main.func"
 char* infile;
+#line 10 "src/main.func"
 StrList_t INCLUDE_LIST;
+#line 11 "src/main.func"
 StrList_t C_SNIPPET_LIST;
+#line 12 "src/main.func"
 StrList_t STRUCT_FORWARD_LIST;
+#line 13 "src/main.func"
 StrList_t STRUCT_LIST;
+#line 14 "src/main.func"
 StrList_t GLOBAL_VAR_LIST;
+#line 15 "src/main.func"
 StrList_t FUNC_FORWARD_LIST;
+#line 16 "src/main.func"
 StrList_t FUNC_LIST;
 
+#line 18 "src/main.func"
 int main(int argc, char** argv);
 
+#line 18 "src/main.func"
 int main(int argc, char** argv) {
 if ((((argc == 1)) || (((argc == 2)) && ((!(strcmp((argv[1]), "-h"))) || (!(strcmp((argv[1]), "--help"))))))) {
 {
@@ -59,20 +71,13 @@ if ((!(fc))) {
     return (-1);
 }
 }
-    StrList_fjoin((&INCLUDE_LIST), fc, "\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&C_SNIPPET_LIST), fc, "\n\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&STRUCT_FORWARD_LIST), fc, "\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&STRUCT_LIST), fc, "\n\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&GLOBAL_VAR_LIST), fc, "\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&FUNC_FORWARD_LIST), fc, "\n");
-    fputs("\n\n", fc);
-    StrList_fjoin((&FUNC_LIST), fc, "\n\n");
-    fputs("\n", fc);
+    StrList_fjoin((&INCLUDE_LIST), fc, "\n", "\n\n");
+    StrList_fjoin((&C_SNIPPET_LIST), fc, "\n\n", "\n\n");
+    StrList_fjoin((&STRUCT_FORWARD_LIST), fc, "\n", "\n\n");
+    StrList_fjoin((&STRUCT_LIST), fc, "\n\n", "\n\n");
+    StrList_fjoin((&GLOBAL_VAR_LIST), fc, "\n", "\n\n");
+    StrList_fjoin((&FUNC_FORWARD_LIST), fc, "\n", "\n\n");
+    StrList_fjoin((&FUNC_LIST), fc, "\n\n", "\n");
     fclose(fc);
     StrList_dtor((&INCLUDE_LIST));
     StrList_dtor((&C_SNIPPET_LIST));
