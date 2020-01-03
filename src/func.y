@@ -97,7 +97,7 @@
 
 %token<strval> T_ID T_NUM T_STR T_CHAR
 %token<strval> OP_UNARY OP_BINARY OP_COMPARE OP_ASSIGN OP_RANGE
-%token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_RETURN KW_BREAK KW_CONTINUE
+%token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_CONST KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
 %type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type pointers minus_operation binary_operation
@@ -187,10 +187,12 @@ var_def: T_ID type                      { LOC_JOIN(@$, @1, @2); $$ = strformat("
        ;
 
 type: T_ID pointers                     { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
+    | T_ID KW_CONST pointers            { LOC_JOIN(@$, @1, @3); $$ = strformat("const %s%s", $1, $3); }
     ;
 
 pointers:                               { LOC_ZERO(@$); $$ = ""; }
         | '*' pointers                  { LOC_JOIN(@$, @1, @2); $$ = strformat("*%s", $2); }
+        | '*' KW_CONST pointers         { LOC_JOIN(@$, @1, @3); $$ = strformat("*const %s", $3); }
         ;
 
 var_assign:                             { LOC_ZERO(@$); $$ = ""; }

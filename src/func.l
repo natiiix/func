@@ -35,6 +35,7 @@
 "for"                           TOKEN(KW_FOR)
 "sizeof"                        TOKEN(KW_SIZEOF)
 "type"                          TOKEN(KW_TYPE)
+"const"                         TOKEN(KW_CONST)
 "return"                        TOKEN(KW_RETURN)
 "break"                         TOKEN(KW_BREAK)
 "continue"                      TOKEN(KW_CONTINUE)
