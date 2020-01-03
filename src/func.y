@@ -1,6 +1,4 @@
 %{
-    #define _GNU_SOURCE
-
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
@@ -8,16 +6,13 @@
     #include <stdbool.h>
 
     #include "strlist.h"
+    #include "main.h"
 
     extern int yylex();
     extern int yyparse();
     extern FILE* yyin;
 
     const char* infile;
-
-    void yyerror(const char* const err);
-
-    char* strformat(const char* const format, ...);
 
     extern StrList_t INCLUDE_LIST;
     extern StrList_t C_SNIPPET_LIST;
@@ -176,6 +171,8 @@ func_body: statement_block              { LOC_COPY(@$, @1); $$ = $1; }
 
 func_params: var_def_list               { LOC_COPY(@$, @1); $$ = $1 ? joinLinkedStrFuncParam($1) : "void"; }
            | var_def                    { LOC_COPY(@$, @1); $$ = $1; }
+           | var_def_list OP_RANGE      { LOC_JOIN(@$, @1, @2); $$ = $1 ? joinLinkedStrFuncParam(newLinkedStr("...", $1)) : "..."; }
+           | var_def OP_RANGE           { LOC_JOIN(@$, @1, @2); $$ = strformat("%s, ...", $1); }
            ;
 
 struct_attr_values:                                             { LOC_ZERO(@$); $$ = ""; }
@@ -268,20 +265,3 @@ binary_operation: OP_BINARY             { LOC_COPY(@$, @1); $$ = $1; }
                 ;
 
 %%
-
-void yyerror(const char* const err) {
-    fprintf(stderr, "%s:%d:%d -- Parser Error: %s\n", infile, yylloc.first_line, yylloc.first_column, err);
-    exit(-1);
-}
-
-char* strformat(const char* const format, ...) {
-    va_list vargs;
-    va_start(vargs, format);
-
-    char* s = NULL;
-    vasprintf(&s, format, vargs);
-
-    va_end(vargs);
-
-    return s;
-}

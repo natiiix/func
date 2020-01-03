@@ -1,5 +1,7 @@
 [stdio string]
 [stdbool stdint]
+[stdarg]
+["func.tab.h"]
 ["strlist.h"]
 
 "extern int yylex();"
@@ -150,4 +152,20 @@
     )
 
     (return out)
+)
+
+(func strformat (format char* ..) char*
+    (var vargs va_list)
+    (va_start vargs format)
+
+    (var s char* NULL)
+    (vasprintf [* s] format vargs)
+
+    (va_end vargs)
+    (return s)
+)
+
+(func yyerror (err char*) void
+    (fprintf stderr "%s:%d:%d -- Parser Error: %s\n" infile yylloc.first_line yylloc.first_column err)
+    (exit $ -1)
 )
