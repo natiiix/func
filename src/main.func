@@ -1,9 +1,12 @@
 [stdio string]
+[stdbool stdint]
 ["strlist.h"]
 
 "extern int yylex();"
 "extern int yyparse();"
 "extern FILE* yyin;"
+
+// "extern char* strformat(const char* const format, ...);"
 
 (var infile char*)
 
@@ -16,6 +19,8 @@
 (var FUNC_LIST StrList_t)
 
 (func main ((argc int) (argv char**)) int
+    // -------- Handle CLI arguments --------
+
     (if (|| (== argc 1)  (&& (== argc 2) (|| (! $ strcmp [argv 1] "-h") (! $ strcmp [argv 1] "--help"))))
         (do
             (puts "Usage: func <output .c file> <input FunC file(s)...>")
@@ -30,12 +35,22 @@
         )
     )
 
+    (if (! $ strsuffix [argv 1] ".c")
+        (do
+            (fputs "First argument must be a file path ending with \".c\"\n" stderr)
+            (return $ -1)
+        )
+    )
+
+    // Create string lists for various code components.
     (= INCLUDE_LIST $ StrList_ctor)
     (= STRUCT_FORWARD_LIST $ StrList_ctor)
     (= STRUCT_LIST $ StrList_ctor)
     (= GLOBAL_VAR_LIST $ StrList_ctor)
     (= FUNC_FORWARD_LIST $ StrList_ctor)
     (= FUNC_LIST $ StrList_ctor)
+
+    // -------- Parse source files --------
 
     (for i .. 2 .. argc
         (if (! $ = yyin $ fopen (= infile [argv i]) "r")
@@ -49,6 +64,35 @@
         (fclose yyin)
     )
 
+    // -------- Generate .h file --------
+
+    // Figure out the header file path.
+    (var hPath char* $ strdup [argv 1])
+    (= [hPath $ - (strlen hPath) 1] 'h')
+
+    (var fh FILE* $ fopen hPath "w")
+    (if (! fh)
+        (do
+            (fprintf stderr "Unable to open output .h file: \"%s\"\n" hPath)
+            (return $ -1)
+        )
+    )
+
+    // Insert header guard into .h file.
+    (var headerGuard char* $ sanitizePath hPath)
+    (fprintf fh "#ifndef __%s_\n" headerGuard)
+    (fprintf fh "#define __%s_\n\n" headerGuard)
+
+    (StrList_fjoin [* INCLUDE_LIST]         fh "\n"     "\n\n")
+    (StrList_fjoin [* STRUCT_FORWARD_LIST]  fh "\n"     "\n\n")
+    (StrList_fjoin [* STRUCT_LIST]          fh "\n\n"   "\n\n")
+    (StrList_fjoin [* FUNC_FORWARD_LIST]    fh "\n"     "\n\n")
+
+    (fprintf fh "#endif\n")
+    (fclose fh)
+
+    // -------- Generate .c file --------
+
     (var fc FILE* $ fopen [argv 1] "w")
     (if (! fc)
         (do
@@ -57,16 +101,16 @@
         )
     )
 
-    (StrList_fjoin [* INCLUDE_LIST]         fc "\n"     "\n\n")
+    // Include the .h file in the .c file.
+    (fprintf fc "#include \"%s\"\n\n" $ getFileName hPath)
+
     (StrList_fjoin [* C_SNIPPET_LIST]       fc "\n\n"   "\n\n")
-    (StrList_fjoin [* STRUCT_FORWARD_LIST]  fc "\n"     "\n\n")
-    (StrList_fjoin [* STRUCT_LIST]          fc "\n\n"   "\n\n")
     (StrList_fjoin [* GLOBAL_VAR_LIST]      fc "\n"     "\n\n")
-    (StrList_fjoin [* FUNC_FORWARD_LIST]    fc "\n"     "\n\n")
     (StrList_fjoin [* FUNC_LIST]            fc "\n\n"   "\n")
 
     (fclose fc)
 
+    // Clean up string lists.
     (StrList_dtor [* INCLUDE_LIST])
     (StrList_dtor [* C_SNIPPET_LIST])
     (StrList_dtor [* STRUCT_FORWARD_LIST])
@@ -74,4 +118,36 @@
     (StrList_dtor [* GLOBAL_VAR_LIST])
     (StrList_dtor [* FUNC_FORWARD_LIST])
     (StrList_dtor [* FUNC_LIST])
+)
+
+(func strsuffix ((str char*) (suffix char*)) bool
+    (var strLen size_t $ strlen str)
+    (var suffixLen size_t $ strlen suffix)
+
+    (return $$ (> suffixLen strLen) false $ ! $ strcmp [* str $ - strLen suffixLen] suffix)
+)
+
+(func getFileName (path char*) char*
+    (var startIndex size_t 0)
+
+    (for (var i size_t 0) [path i] (++i)
+        (if (|| (== [path i] '/') (== [path i] '\\'))
+            (= startIndex $ + i 1)
+        )
+    )
+
+    (return [* path startIndex])
+)
+
+(func sanitizePath (path char*) char*
+    (var out char* $ strdup path)
+
+    (for (var i size_t 0) [out i] (++i)
+        (var c char [out i])
+        (if (! $ || (<= 'a' c 'z') (<= 'A' c 'Z') (<= '0' c '9'))
+            (= [out i] '_')
+        )
+    )
+
+    (return out)
 )
