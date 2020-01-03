@@ -57,26 +57,13 @@
         )
     )
 
-    (StrList_fjoin [* INCLUDE_LIST] fc "\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* C_SNIPPET_LIST] fc "\n\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* STRUCT_FORWARD_LIST] fc "\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* STRUCT_LIST] fc "\n\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* GLOBAL_VAR_LIST] fc "\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* FUNC_FORWARD_LIST] fc "\n")
-    (fputs "\n\n" fc)
-
-    (StrList_fjoin [* FUNC_LIST] fc "\n\n")
-    (fputs "\n" fc)
+    (StrList_fjoin [* INCLUDE_LIST]         fc "\n"     "\n\n")
+    (StrList_fjoin [* C_SNIPPET_LIST]       fc "\n\n"   "\n\n")
+    (StrList_fjoin [* STRUCT_FORWARD_LIST]  fc "\n"     "\n\n")
+    (StrList_fjoin [* STRUCT_LIST]          fc "\n\n"   "\n\n")
+    (StrList_fjoin [* GLOBAL_VAR_LIST]      fc "\n"     "\n\n")
+    (StrList_fjoin [* FUNC_FORWARD_LIST]    fc "\n"     "\n\n")
+    (StrList_fjoin [* FUNC_LIST]            fc "\n\n"   "\n")
 
     (fclose fc)
 

@@ -31,7 +31,7 @@ void StrList_append(StrList_t* const list, const char* const str)
     list->ptr[list->size++] = str;
 }
 
-void StrList_fjoin(StrList_t* const list, FILE* const f, const char* const separator)
+void StrList_fjoin(StrList_t* const list, FILE* const f, const char* const separator, const char* const suffix)
 {
     for (size_t i = 0; i < list->size; i++)
     {
@@ -41,5 +41,10 @@ void StrList_fjoin(StrList_t* const list, FILE* const f, const char* const separ
         }
 
         fputs(list->ptr[i], f);
+    }
+
+    if (list->size)
+    {
+        fputs(suffix, f);
     }
 }
