@@ -101,7 +101,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_CONST KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type raw_type minus_operation binary_operation
+%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type_list type_list_next type raw_type minus_operation binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ptr_member ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
@@ -186,7 +186,16 @@ var_def_list:                               { LOC_ZERO(@$); $$ = NULL; }
             ;
 
 var_def: T_ID type                      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s %s", $2, $1); }
+       | T_ID '(' type_list ')' type    { LOC_JOIN(@$, @1, @5); $$ = strformat("%s (*%s)(%s)", $5, $1, $3); }
        ;
+
+type_list:                              { LOC_ZERO(@$); $$ = "void"; }
+         | type type_list_next          { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
+         ;
+
+type_list_next:                         { LOC_ZERO(@$); $$ = ""; }
+              | type type_list_next     { LOC_JOIN(@$, @1, @2); $$ = strformat(", %s%s", $1, $2); }
+              ;
 
 type: raw_type                          { LOC_COPY(@$, @1); $$ = $1; }
     | KW_CONST raw_type                 { LOC_JOIN(@$, @1, @2); $$ = strformat("%s const", $2); }
