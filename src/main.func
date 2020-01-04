@@ -4,6 +4,8 @@
 ["func.tab.h"]
 ["strlist.h"]
 
+(type String *char)
+
 "extern FILE* yyin;"
 
 "int yylex();"
@@ -11,9 +13,10 @@
 
 // "extern char* strformat(const char* const format, ...);"
 
-(var infile *char)
+(var infile String)
 
 (var INCLUDE_LIST StrList_t)
+(var TYPEDEF_LIST StrList_t)
 (var C_SNIPPET_LIST StrList_t)
 (var STRUCT_FORWARD_LIST StrList_t)
 (var STRUCT_LIST StrList_t)
@@ -21,7 +24,7 @@
 (var FUNC_FORWARD_LIST StrList_t)
 (var FUNC_LIST StrList_t)
 
-(func main ((argc int) (argv **char)) int
+(func main ((argc int) (argv *String)) int
     // -------- Handle CLI arguments --------
 
     (if (|| (== argc 1)  (&& (== argc 2) (|| (! $ strcmp [argv 1] "-h") (! $ strcmp [argv 1] "--help"))))
@@ -47,6 +50,8 @@
 
     // Create string lists for various code components.
     (= INCLUDE_LIST $ StrList_ctor)
+    (= TYPEDEF_LIST $ StrList_ctor)
+    (= C_SNIPPET_LIST $ StrList_ctor)
     (= STRUCT_FORWARD_LIST $ StrList_ctor)
     (= STRUCT_LIST $ StrList_ctor)
     (= GLOBAL_VAR_LIST $ StrList_ctor)
@@ -70,7 +75,7 @@
     // -------- Generate .h file --------
 
     // Figure out the header file path.
-    (var hPath *char $ strdup [argv 1])
+    (var hPath String $ strdup [argv 1])
     (= [hPath $ - (strlen hPath) 1] 'h')
 
     (var fh *FILE $ fopen hPath "w")
@@ -82,11 +87,12 @@
     )
 
     // Insert header guard into .h file.
-    (var headerGuard *char $ sanitizePath hPath)
+    (var headerGuard String $ sanitizePath hPath)
     (fprintf fh "#ifndef __%s_\n" headerGuard)
     (fprintf fh "#define __%s_\n\n" headerGuard)
 
     (StrList_fjoin [* INCLUDE_LIST]         fh "\n"     "\n\n")
+    (StrList_fjoin [* TYPEDEF_LIST]         fh "\n"     "\n\n")
     (StrList_fjoin [* STRUCT_FORWARD_LIST]  fh "\n"     "\n\n")
     (StrList_fjoin [* STRUCT_LIST]          fh "\n\n"   "\n\n")
     (StrList_fjoin [* FUNC_FORWARD_LIST]    fh "\n"     "\n\n")
@@ -115,6 +121,7 @@
 
     // Clean up string lists.
     (StrList_dtor [* INCLUDE_LIST])
+    (StrList_dtor [* TYPEDEF_LIST])
     (StrList_dtor [* C_SNIPPET_LIST])
     (StrList_dtor [* STRUCT_FORWARD_LIST])
     (StrList_dtor [* STRUCT_LIST])
@@ -123,14 +130,14 @@
     (StrList_dtor [* FUNC_LIST])
 )
 
-(func strsuffix ((str *char) (suffix *char)) bool
+(func strsuffix ((str String) (suffix String)) bool
     (var strLen size_t $ strlen str)
     (var suffixLen size_t $ strlen suffix)
 
     (return $$ (> suffixLen strLen) false $ ! $ strcmp [* str $ - strLen suffixLen] suffix)
 )
 
-(func getFileName (path *char) *char
+(func getFileName (path String) String
     (var startIndex size_t 0)
 
     (for (var i size_t 0) [path i] (++i)
@@ -142,8 +149,8 @@
     (return [* path startIndex])
 )
 
-(func sanitizePath (path *char) *char
-    (var out *char $ strdup path)
+(func sanitizePath (path String) String
+    (var out String $ strdup path)
 
     (for (var i size_t 0) [out i] (++i)
         (var c char [out i])
@@ -155,11 +162,11 @@
     (return out)
 )
 
-(func strformat (format *char ..) *char
+(func strformat (format String ..) String
     (var vargs va_list)
     (va_start vargs format)
 
-    (var s *char NULL)
+    (var s String NULL)
     (vasprintf [* s] format vargs)
 
     (va_end vargs)

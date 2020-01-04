@@ -15,6 +15,7 @@
     const char* infile;
 
     extern StrList_t INCLUDE_LIST;
+    extern StrList_t TYPEDEF_LIST;
     extern StrList_t C_SNIPPET_LIST;
     extern StrList_t STRUCT_FORWARD_LIST;
     extern StrList_t STRUCT_LIST;
@@ -125,6 +126,7 @@ top_level_statement_block:                                                  { LO
 
 top_level_statement: '(' KW_FUNC func_head func_body ')'    { LOC_JOIN(@$, @1, @5); StrList_append(&FUNC_LIST, strformat("%s%s {\n%s}", LOC_LINE(@$), $3, $4)); StrList_append(&FUNC_FORWARD_LIST, strformat("%s%s;", LOC_LINE(@$), $3)); }
                    | '(' KW_STRUCT T_ID var_def_list ')'    { LOC_JOIN(@$, @1, @5); StrList_append(&STRUCT_LIST, strformat("%sstruct %s {\n%s};", LOC_LINE(@$), $3, joinLinkedStrStructAttr($4))); StrList_append(&STRUCT_FORWARD_LIST, strformat("%stypedef struct %s %s;", LOC_LINE(@$), $3, $3)); }
+                   | '(' KW_TYPE T_ID type ')'              { LOC_JOIN(@$, @1, @5); StrList_append(&TYPEDEF_LIST, strformat("%stypedef %s %s;", LOC_LINE(@$), $4, $3)); }
                    | var_def_stat                           { LOC_COPY(@$, @1); StrList_append(&GLOBAL_VAR_LIST, strformat("%s%s;", LOC_LINE(@$), $1)); }
                    | T_STR                                  { LOC_COPY(@$, @1); StrList_append(&C_SNIPPET_LIST, strformat("%s%s", LOC_LINE(@$), cstrip($1))); }
                    ;
