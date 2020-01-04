@@ -4,13 +4,14 @@
 ["func.tab.h"]
 ["strlist.h"]
 
-"extern int yylex();"
-"extern int yyparse();"
 "extern FILE* yyin;"
+
+"int yylex();"
+"int yyparse();"
 
 // "extern char* strformat(const char* const format, ...);"
 
-(var infile char*)
+(var infile *char)
 
 (var INCLUDE_LIST StrList_t)
 (var C_SNIPPET_LIST StrList_t)
@@ -20,7 +21,7 @@
 (var FUNC_FORWARD_LIST StrList_t)
 (var FUNC_LIST StrList_t)
 
-(func main ((argc int) (argv char**)) int
+(func main ((argc int) (argv **char)) int
     // -------- Handle CLI arguments --------
 
     (if (|| (== argc 1)  (&& (== argc 2) (|| (! $ strcmp [argv 1] "-h") (! $ strcmp [argv 1] "--help"))))
@@ -69,10 +70,10 @@
     // -------- Generate .h file --------
 
     // Figure out the header file path.
-    (var hPath char* $ strdup [argv 1])
+    (var hPath *char $ strdup [argv 1])
     (= [hPath $ - (strlen hPath) 1] 'h')
 
-    (var fh FILE* $ fopen hPath "w")
+    (var fh *FILE $ fopen hPath "w")
     (if (! fh)
         (do
             (fprintf stderr "Unable to open output .h file: \"%s\"\n" hPath)
@@ -81,7 +82,7 @@
     )
 
     // Insert header guard into .h file.
-    (var headerGuard char* $ sanitizePath hPath)
+    (var headerGuard *char $ sanitizePath hPath)
     (fprintf fh "#ifndef __%s_\n" headerGuard)
     (fprintf fh "#define __%s_\n\n" headerGuard)
 
@@ -95,7 +96,7 @@
 
     // -------- Generate .c file --------
 
-    (var fc FILE* $ fopen [argv 1] "w")
+    (var fc *FILE $ fopen [argv 1] "w")
     (if (! fc)
         (do
             (fprintf stderr "Unable to open output .c file: \"%s\"\n" [argv 1])
@@ -122,14 +123,14 @@
     (StrList_dtor [* FUNC_LIST])
 )
 
-(func strsuffix ((str char*) (suffix char*)) bool
+(func strsuffix ((str *char) (suffix *char)) bool
     (var strLen size_t $ strlen str)
     (var suffixLen size_t $ strlen suffix)
 
     (return $$ (> suffixLen strLen) false $ ! $ strcmp [* str $ - strLen suffixLen] suffix)
 )
 
-(func getFileName (path char*) char*
+(func getFileName (path *char) *char
     (var startIndex size_t 0)
 
     (for (var i size_t 0) [path i] (++i)
@@ -141,8 +142,8 @@
     (return [* path startIndex])
 )
 
-(func sanitizePath (path char*) char*
-    (var out char* $ strdup path)
+(func sanitizePath (path *char) *char
+    (var out *char $ strdup path)
 
     (for (var i size_t 0) [out i] (++i)
         (var c char [out i])
@@ -154,18 +155,18 @@
     (return out)
 )
 
-(func strformat (format char* ..) char*
+(func strformat (format *char ..) *char
     (var vargs va_list)
     (va_start vargs format)
 
-    (var s char* NULL)
+    (var s *char NULL)
     (vasprintf [* s] format vargs)
 
     (va_end vargs)
     (return s)
 )
 
-(func yyerror (err char const*) void
+(func yyerror (err *const char) void
     (fprintf stderr "%s:%d:%d -- Parser Error: %s\n" infile yylloc.first_line yylloc.first_column err)
     (exit $ -1)
 )

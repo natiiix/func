@@ -16,17 +16,17 @@
 #line 5 "src/main.func"
 #include "strlist.h"
 
-#line 23 "src/main.func"
+#line 24 "src/main.func"
 int main(int argc, char** argv);
-#line 125 "src/main.func"
+#line 126 "src/main.func"
 bool strsuffix(char* str, char* suffix);
-#line 132 "src/main.func"
+#line 133 "src/main.func"
 char* getFileName(char* path);
-#line 144 "src/main.func"
+#line 145 "src/main.func"
 char* sanitizePath(char* path);
-#line 157 "src/main.func"
+#line 158 "src/main.func"
 char* strformat(char* format, ...);
-#line 168 "src/main.func"
-void yyerror(const char* err);
+#line 169 "src/main.func"
+void yyerror(char const* err);
 
 #endif
