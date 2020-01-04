@@ -100,7 +100,7 @@
 %token KW_FUNC KW_VAR KW_STRUCT KW_DO KW_IF KW_WHILE KW_FOR KW_SIZEOF KW_TYPE KW_CONST KW_RETURN KW_BREAK KW_CONTINUE
 
 %type<strval> statement_block statement
-%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type pointers minus_operation binary_operation
+%type<strval> elem_or_var_def var_def_stat for_head else_if func_head func_body func_params struct_attr_values var_def type raw_type minus_operation binary_operation
 %type<strval> var_assign call_args any_expr elem_expr dollar_expr round_expr arith_expr ptr_member ternary basic_value
 
 %type<linkedstr> var_def_list operands operands_next
@@ -186,13 +186,12 @@ var_def_list:                               { LOC_ZERO(@$); $$ = NULL; }
 var_def: T_ID type                      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s %s", $2, $1); }
        ;
 
-type: T_ID pointers                     { LOC_JOIN(@$, @1, @2); $$ = strformat("%s%s", $1, $2); }
-    | T_ID KW_CONST pointers            { LOC_JOIN(@$, @1, @3); $$ = strformat("const %s%s", $1, $3); }
+type: raw_type                          { LOC_COPY(@$, @1); $$ = $1; }
+    | KW_CONST raw_type                 { LOC_JOIN(@$, @1, @2); $$ = strformat("%s const", $2); }
     ;
 
-pointers:                               { LOC_ZERO(@$); $$ = ""; }
-        | '*' pointers                  { LOC_JOIN(@$, @1, @2); $$ = strformat("*%s", $2); }
-        | '*' KW_CONST pointers         { LOC_JOIN(@$, @1, @3); $$ = strformat("*const %s", $3); }
+raw_type: T_ID                          { LOC_COPY(@$, @1); $$ = $1; }
+        | '*' type                      { LOC_JOIN(@$, @1, @2); $$ = strformat("%s*", $2); }
         ;
 
 var_assign:                             { LOC_ZERO(@$); $$ = ""; }
