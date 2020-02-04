@@ -18,18 +18,39 @@
 
 #line 7 "src/main.func"
 typedef char* String;
+#line 8 "src/main.func"
+typedef char const* ConstString;
 
-#line 27 "src/main.func"
+#line 1 "src/LinkedStr.func"
+typedef struct LinkedStr_t LinkedStr_t;
+
+#line 1 "src/LinkedStr.func"
+struct LinkedStr_t {
+    ConstString str;
+    LinkedStr_t const* next;
+};
+
+#line 28 "src/main.func"
 int main(int argc, String* argv);
-#line 133 "src/main.func"
+#line 134 "src/main.func"
 bool strsuffix(String str, String suffix);
-#line 140 "src/main.func"
+#line 141 "src/main.func"
 String getFileName(String path);
-#line 152 "src/main.func"
+#line 153 "src/main.func"
 String sanitizePath(String path);
-#line 165 "src/main.func"
+#line 166 "src/main.func"
 String strformat(String format, ...);
-#line 176 "src/main.func"
+#line 177 "src/main.func"
 void yyerror(char const* err);
+#line 6 "src/LinkedStr.func"
+LinkedStr_t* newLinkedStr(ConstString str, LinkedStr_t const* next);
+#line 11 "src/LinkedStr.func"
+ConstString joinLinkedStrBinOp(LinkedStr_t const* ls, ConstString op);
+#line 17 "src/LinkedStr.func"
+ConstString joinLinkedStrCompOp(LinkedStr_t const* ls, ConstString op);
+#line 31 "src/LinkedStr.func"
+ConstString joinLinkedStrFuncParam(LinkedStr_t const* ls);
+#line 40 "src/LinkedStr.func"
+ConstString joinLinkedStrStructAttr(LinkedStr_t const* ls);
 
 #endif

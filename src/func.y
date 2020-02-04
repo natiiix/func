@@ -23,39 +23,6 @@
     extern StrList_t FUNC_FORWARD_LIST;
     extern StrList_t FUNC_LIST;
 
-    struct LinkedStr_t {
-        const char* const str;
-        const struct LinkedStr_t* const next;
-    };
-
-    const struct LinkedStr_t* newLinkedStr(const char* const str, const struct LinkedStr_t* const next) {
-        const struct LinkedStr_t linkedstr = { .str = str, .next = next };
-        return memcpy(malloc(sizeof(struct LinkedStr_t)), &linkedstr, sizeof(struct LinkedStr_t));
-    }
-
-    const char* joinLinkedStrBinOp(const struct LinkedStr_t* const ls, const char* const op) {
-        return ls->next ? strformat("%s %s %s", ls->str, op, joinLinkedStrBinOp(ls->next, op)) : ls->str;
-    }
-
-    const char* joinLinkedStrCompOp(const struct LinkedStr_t* const ls, const char* const op) {
-        if (ls->next) {
-            const char* const strNext = joinLinkedStrCompOp(ls->next, op);
-            return ls->next->next ?
-                strformat("(%s %s %s) && %s", ls->str, op, ls->next->str, strNext) :
-                strformat("(%s %s %s)", ls->str, op, strNext);
-        } else {
-            return ls->str;
-        }
-    }
-
-    const char* joinLinkedStrFuncParam(const struct LinkedStr_t* const ls) {
-        return ls ? ls->next ? strformat("%s, %s", ls->str, joinLinkedStrFuncParam(ls->next)) : ls->str : "";
-    }
-
-    const char* joinLinkedStrStructAttr(const struct LinkedStr_t* const ls) {
-        return ls ? strformat("    %s;\n%s", ls->str, joinLinkedStrStructAttr(ls->next)) : "";
-    }
-
     char* cstrip(const char* const str) {
         size_t len = strlen(str);
         char* out = malloc(len - 1);

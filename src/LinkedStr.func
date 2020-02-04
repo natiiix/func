@@ -1,0 +1,44 @@
+(struct LinkedStr_t
+    (str ConstString)
+    (next *const LinkedStr_t)
+)
+
+(func newLinkedStr ((str ConstString) (next *const LinkedStr_t)) *LinkedStr_t
+    (var linkedstr LinkedStr_t {(str str) (next next)})
+    (return $ memcpy (malloc $ sizeof LinkedStr_t) [* linkedstr] (sizeof LinkedStr_t))
+)
+
+(func joinLinkedStrBinOp ((ls *const LinkedStr_t) (op ConstString)) ConstString $
+    ls.[next]
+        (strformat "%s %s %s" ls.[str] op $ joinLinkedStrBinOp ls.[next] op)
+        ls.[str]
+)
+
+(func joinLinkedStrCompOp ((ls *const LinkedStr_t) (op ConstString)) ConstString
+    (if ls.[next]
+        (do
+            (var strNext ConstString $ joinLinkedStrCompOp ls.[next] op)
+            (return $$
+                ls.[next next]
+                    (strformat "(%s %s %s) && %s" ls.[str] op ls.[next str] strNext)
+                    (strformat "(%s %s %s)" ls.[str] op strNext)
+            )
+        )
+        (return ls.[str])
+    )
+)
+
+(func joinLinkedStrFuncParam (ls *const LinkedStr_t) ConstString $
+    ls
+        ($ ls.[next]
+            (strformat "%s, %s" ls.[str] $ joinLinkedStrFuncParam ls.[next])
+            ls.[str]
+        )
+        ""
+)
+
+(func joinLinkedStrStructAttr (ls *const LinkedStr_t) ConstString $
+    ls
+        (strformat "    %s;\n%s" ls.[str] $ joinLinkedStrStructAttr ls.[next])
+        ""
+)

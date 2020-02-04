@@ -5,6 +5,7 @@
 ["strlist.h"]
 
 (type String *char)
+(type ConstString *const char)
 
 "extern FILE* yyin;"
 
