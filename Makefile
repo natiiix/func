@@ -26,6 +26,7 @@ endif
 	bison -d -o ${TMP_BISON} --verbose ${SRC_BISON}
 	cp ${SRC_DIR}*.c ${TMP_DIR}
 	cp ${SRC_DIR}*.h ${TMP_DIR}
+	mkdir -p ${BIN_DIR}
 	gcc -Wall -Wextra -D_GNU_SOURCE -o ${BIN_NEW} ${TMP_DIR}*.c
 ifeq ("$(wildcard ${BIN_OLD})", "${BIN_OLD}")
 	cp ${BIN_OLD} ${BIN_OLDER}
