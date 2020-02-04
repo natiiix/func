@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install build tools
-      run: apt install -y flex bison
+      run: sudo apt-get install -y flex bison
     - name: make (1)
       run: make
     - name: make (2)
