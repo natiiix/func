@@ -1,5 +1,7 @@
 # FunC Programming Language Compiler
 
+![C/C++ CI](https://github.com/natiiix/func/workflows/C/C++%20CI/badge.svg)
+
 The FunC language has a Lisp-like syntax and compiles to C code using GNU Bison and Flex.
 
 Please use [this VS Code extension](https://marketplace.visualstudio.com/items?itemName=natiiix.func-language-support) for syntax highlighting.
