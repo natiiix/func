@@ -32,6 +32,7 @@ StrList_t FUNC_LIST;
 int main(int argc, String* argv) {
 #line 30 "src/main.func"
 if ((((argc == 1)) || (((argc == 2)) && ((!(strcmp((argv[1]), "-h"))) || (!(strcmp((argv[1]), "--help"))))))) {
+#line 31 "src/main.func"
 {
 #line 32 "src/main.func"
     puts("Usage: func <output .c file> <input FunC file(s)...>");
@@ -41,6 +42,7 @@ if ((((argc == 1)) || (((argc == 2)) && ((!(strcmp((argv[1]), "-h"))) || (!(strc
 }
 #line 37 "src/main.func"
 if (((argc < 3))) {
+#line 38 "src/main.func"
 {
 #line 39 "src/main.func"
     fprintf(stderr, "Invalid number of command-line arguments (expected at least 2, got %d)\n", (argc - 1));
@@ -50,6 +52,7 @@ if (((argc < 3))) {
 }
 #line 44 "src/main.func"
 if ((!(strsuffix((argv[1]), ".c")))) {
+#line 45 "src/main.func"
 {
 #line 46 "src/main.func"
     fputs("First argument must be a file path ending with \".c\"\n", stderr);
@@ -77,6 +80,7 @@ if ((!(strsuffix((argv[1]), ".c")))) {
 for (int i = 2; i < argc; i++) {
 #line 64 "src/main.func"
 if ((!((yyin = fopen((infile = (argv[i])), "r"))))) {
+#line 65 "src/main.func"
 {
 #line 66 "src/main.func"
     fprintf(stderr, "Unable to open input file: \"%s\"\n", infile);
@@ -97,6 +101,7 @@ if ((!((yyin = fopen((infile = (argv[i])), "r"))))) {
     FILE* fh = fopen(hPath, "w");
 #line 82 "src/main.func"
 if ((!(fh))) {
+#line 83 "src/main.func"
 {
 #line 84 "src/main.func"
     fprintf(stderr, "Unable to open output .h file: \"%s\"\n", hPath);
@@ -128,6 +133,7 @@ if ((!(fh))) {
     FILE* fc = fopen((argv[1]), "w");
 #line 106 "src/main.func"
 if ((!(fc))) {
+#line 107 "src/main.func"
 {
 #line 108 "src/main.func"
     fprintf(stderr, "Unable to open output .c file: \"%s\"\n", (argv[1]));
@@ -181,6 +187,7 @@ String getFileName(String path) {
 for (size_t i = 0; (path[i]); (++(i))) {
 #line 144 "src/main.func"
 if (((((path[i]) == '/')) || (((path[i]) == '\\')))) {
+#line 145 "src/main.func"
     (startIndex = (i + 1));
 }
 }
@@ -198,6 +205,7 @@ for (size_t i = 0; (out[i]); (++(i))) {
     char c = (out[i]);
 #line 157 "src/main.func"
 if ((!(((('a' <= c) && (c <= 'z')) || (('A' <= c) && (c <= 'Z')) || (('0' <= c) && (c <= '9')))))) {
+#line 158 "src/main.func"
     ((out[i]) = '_');
 }
 }

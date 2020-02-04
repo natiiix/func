@@ -137,7 +137,7 @@ statement_block:                                { LOC_ZERO(@$); $$ = ""; }
 
 statement: elem_or_var_def                              { LOC_COPY(@$, @1); $$ = strformat("    %s;\n", $1); }
          | '(' KW_DO statement_block ')'                { LOC_JOIN(@$, @1, @4); $$ = strformat("{\n%s}\n", $3); }
-         | '(' KW_IF elem_expr statement else_if ')'    { LOC_JOIN(@$, @1, @6); $$ = strformat("if (%s) {\n%s}\n%s", $3, $4, $5); }
+         | '(' KW_IF elem_expr statement else_if ')'    { LOC_JOIN(@$, @1, @6); $$ = strformat("if (%s) {\n%s%s}\n%s", $3, LOC_LINE(@4), $4, $5); }
          | '(' KW_WHILE elem_expr statement_block ')'   { LOC_JOIN(@$, @1, @5); $$ = strformat("while (%s) {\n%s}\n", $3, $4); }
          | '(' KW_FOR for_head statement_block ')'      { LOC_JOIN(@$, @1, @5); $$ = strformat("for (%s) {\n%s}\n", $3, $4); }
          | '(' KW_RETURN ')'                            { LOC_JOIN(@$, @1, @3); $$ = "    return;\n"; }
@@ -159,8 +159,8 @@ for_head: elem_or_var_def elem_expr elem_expr           { LOC_JOIN(@$, @1, @3); 
         ;
 
 else_if:                                { LOC_ZERO(@$); $$ = ""; }
-       | statement                      { LOC_COPY(@$, @1); $$ = strformat("else {\n%s}\n", $1); }
-       | elem_expr statement else_if    { LOC_JOIN(@$, @1, @3); $$ = strformat("else if (%s) {\n%s}\n%s", $1, $2, $3); }
+       | statement                      { LOC_COPY(@$, @1); $$ = strformat("else {\n%s%s}\n", LOC_LINE(@1), $1); }
+       | elem_expr statement else_if    { LOC_JOIN(@$, @1, @3); $$ = strformat("else if (%s) {\n%s%s}\n%s", $1, LOC_LINE(@2), $2, $3); }
        ;
 
 func_head: T_ID '(' func_params ')' type    { LOC_JOIN(@$, @1, @5); $$ = strformat("%s %s(%s)", $5, $1, $3); }
