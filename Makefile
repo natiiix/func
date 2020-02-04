@@ -19,7 +19,7 @@ ${BIN_NEW}: Makefile $(wildcard ${SRC_DIR}*)
 ifeq ("$(wildcard ${BIN_OLD}) $(wildcard ${BIN_OLDER})", "${BIN_OLD} ${BIN_OLDER}")
 	rm -rfv ${TMP_DIR}
 	mkdir -p ${TMP_DIR}
-	./${BIN_OLD} ${TMP_DIR}main.c ${SRC_DIR}main.func
+	./${BIN_OLD} ${TMP_DIR}main.c $(wildcard ${SRC_DIR}*.func)
 	# || ./${BIN_OLDER} ${TMP_DIR}main.c ${SRC_DIR}main.func
 endif
 	flex --nodefault -o ${TMP_FLEX} ${SRC_FLEX}
